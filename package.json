@@ -1,0 +1,16 @@
+{
+  "name": "bookfood",
+  "version": "1.0.0",
+  "description": "Food App Build With Node.js and Express.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "food",
+    "app",
+    "delivery"
+  ],
+  "author": "Treido",
+  "license": "ISC"
+}

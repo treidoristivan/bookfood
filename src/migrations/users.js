@@ -1,14 +1,14 @@
 const users = `
-CREATE TABLE IF NOT EXIST users(
+CREATE TABLE IF NOT EXISTS users(
   id int(11) PRIMARY KEY AUTO_INCREMENT, 
   username varchar(25),
   password varchar(25)
 )
 `
 const usersDetail = `
-CREATE TABLE IF NOT EXIST users(
+CREATE TABLE IF NOT EXISTS usersDetail(
   id int(11) PRIMARY KEY AUTO_INCREMENT, 
-  idUsers int(11) FOREIGN KEY REFERENCES users(id),
+  idUsers int(11),
   name varchar(50),
   birth_date date,
   email varchar(50),
@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXIST users(
 )
 `
 const usersAddress = `
-CREATE TABLE IF NOT EXIST users(
+CREATE TABLE IF NOT EXISTS usersAddress(
   id int(11) PRIMARY KEY AUTO_INCREMENT, 
-  idUsers int(11) FOREIGN KEY REFERENCES users(id),
+  idUsers int(11),
   address text,
   isPrimary tinyint(1)
 )
 `
-module.exports = { users, usersDetail, usersAddress }
+module.exports = [users, usersDetail, usersAddress]

@@ -4,6 +4,8 @@
   "description": "Food App Build With Node.js and Express.js",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "migrate": "node ./src/migrations/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

@@ -32,7 +32,7 @@ exports.CreateItems = (data) => {
     })
   })
 }
-exports.UpdateItem = (id, params) => {
+exports.UpdateItems = (id, params) => {
   return new Promise((resolve, reject) => {
     runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE _id = ${id}`, (err, results, fields) => {
       if (err) {
@@ -45,7 +45,7 @@ exports.UpdateItem = (id, params) => {
   })
 }
 
-exports.DeleteItem = (id) => {
+exports.DeleteItems = (id) => {
   return new Promise((resolve, reject) => {
     runQuery(`DELETE FROM items WHERE _id=${id}`, (err, results, fields) => {
       if (err) {

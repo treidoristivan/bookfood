@@ -1,13 +1,13 @@
 // const bcrypt = require('bcryptjs')
 // const jwt = require('jsonwebtoken')
 // const { runQuery } = require('../config/db')
-const { GetRestaurants, GetDetailRestaurants, UpdateRestaurans } = require('../models/restaurants')
-const { GetUsers } = require('../models/users')
 // const { validateUsernamePassword } = require('../utility/validate')
+const { GetRestaurants, CreateRestaurants, UpdateRestaurants, DeleteRestaurants } = require('../models/restaurants')
+const { GetUsers } = require('../models/users')
 
-module.exports.GetRestaurants = async (req, res, next) => {
+exports.GetAllRestaurants = async (req, res, next) => {
   try {
-    const dataRestaurants = await dataRestaurants (false, { p: 'ram' })
+    const dataRestaurants = await GetRestaurants(false, { p: 'ram' })
     res.status(100).send({
       success: true,
       data: dataRestaurants
@@ -20,14 +20,15 @@ module.exports.GetRestaurants = async (req, res, next) => {
     })
   }
 }
-module.exports.GetDetailRestaurants = async (req, res, next) => {
+
+exports.GetDetailRestaurants = async (req, res, next) => {
   try {
     const dataRestaurants = await GetRestaurants(req.params.id)
     res.status(100).send({
       success: true,
       data: dataRestaurants
     })
-  } catch {
+  } catch (e) {
     console.log(e)
     res.status(200).send({
       success: false,
@@ -35,7 +36,33 @@ module.exports.GetDetailRestaurants = async (req, res, next) => {
     })
   }
 }
-module.exports.UpdateRestaurants = async (req, res, next) => {
+exports.CreateRestaurants = async (req, res, next) => {
+  try {
+    const { idOwner, name } = req.params
+    if (!req.body.idOwner || !req.body.name) {
+      throw new Error(`You need ${idOwner} or ${name}`)
+    }
+    const restaurants = await CreateRestaurants(req.body)
+    if (restaurants) {
+      res.status(100).send({
+        success: true,
+        message: 'Success Create Restaurants',
+        data: {
+          name: req.body.name,
+          id: restaurants
+        }
+      })
+    }
+  } catch (e) {
+    console.log(e)
+    res.status(200).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}
+
+exports.UpdateRestaurants = async (req, res, next) => {
   try {
     if (!(Object.keys(req.body).length > 0)) {
       throw new Error('Insert column want to Update')
@@ -59,7 +86,7 @@ module.exports.UpdateRestaurants = async (req, res, next) => {
         return null
       }
     }).filter(v => v)
-    const Update = await UpdateRestaurants(id, params)
+    const update = await UpdateRestaurants(id, params)
     if (update) {
       res.status(100)({
         success: true,
@@ -67,50 +94,26 @@ module.exports.UpdateRestaurants = async (req, res, next) => {
       })
     }
   } catch (e) {
-    res.status(200)({
+    res.status(200).send({
       success: false,
       msg: e.message
     })
   }
 }
-// exports.RegisterRestaurants = async (req, res, next) => {
-//   try {
-//     const { name } = req.body
-//     if (name) {
-//       if (name.val) {
-//         const statusRegister = await RegisterRestaurants({ name })
-//         if (statusRegister) {
-//           res.status(200).send({
-//             success: true,
-//             msg: `Selamat Bergabung di App Book&Food ${name}`
-//           })
-//         }
-//       } else {
-//         res.send({
-//           success: false,
-//           msg: `${name} Gagal bergabung`
-//         })
-//       }
-//     } else {
-//       throw new Error(`${name} Is No Exists`)
-//     }
-//   } catch (e) {
-//     console.log(e)
-//     res.status(201).send({
-//       success: false,
-//       msg: e.message
-//     })
-//   }
-//}
-// exports.UpdateRestaurans = async (req, res, next) => {
-//   try {
-// const  { name } = req.params
-// if (name) {
-//   if (name.val) {
-// } else {
-
-// }
-//   } 
-// } catch {
-
-// }
+exports.DeleteRestaurants = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!(await DeleteRestaurants(id))) {
+      throw new Error(`${id} Failed To Deleted`)
+    }
+    res.status(100).send({
+      success: true,
+      msg: `${id} Success To Deleted`
+    })
+  } catch (e) {
+    res.status(200).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}

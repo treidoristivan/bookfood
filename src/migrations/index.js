@@ -22,7 +22,7 @@ db.query(`
       if (err) {
         console.log(err)
       } else {
-        console.log('>>>>> Migrate Connected')
+        console.log('Migrate Connected')
       }
     })
     db.end()

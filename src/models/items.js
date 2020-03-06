@@ -34,7 +34,7 @@ exports.CreateItems = (data) => {
 }
 exports.UpdateItems = (id, params) => {
   return new Promise((resolve, reject) => {
-    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE _id = ${id}`, (err, results, fields) => {
+    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id = ${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))
@@ -47,7 +47,7 @@ exports.UpdateItems = (id, params) => {
 
 exports.DeleteItems = (id) => {
   return new Promise((resolve, reject) => {
-    runQuery(`DELETE FROM items WHERE _id=${id}`, (err, results, fields) => {
+    runQuery(`DELETE FROM items WHERE id=${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))

@@ -30,7 +30,7 @@ exports.RegisterUser = (data) => {
                 reject(new Error(err))
                 console.log(results[1].solutions)
               } else {
-                runQuery(`INSERT INTO userProfile(id_user) VALUES(${results[1].insertId})`,
+                runQuery(`INSERT INTO usersProfile(id_user) VALUES(${results[1].insertId})`,
                   (err, results, fields) => {
                     if (!err) {
                       resolve(true)
@@ -48,7 +48,7 @@ exports.RegisterUser = (data) => {
 
 exports.UpdateProfile = (id, params) => {
   return new Promise((resolve, reject) => {
-    let query = []
+    const query = []
     const paramsUsers = params.slice().filter(v => ['username', 'password'].includes(v.keys))
     console.log(params)
     console.log(paramsUsers)
@@ -57,7 +57,7 @@ exports.UpdateProfile = (id, params) => {
       query.push(`UPDATE users SET ${paramsUsers.map(v => `${v.keys} = '${v.value}'`).join(' , ')} WHERE id=${id}`)
     }
     if (paramsProfile.length > 0) {
-      query.push(`UPDATE userProfile SET ${paramsProfile.map(v => `${v.keys} = '${v.value}'`).join(' , ')} WHERE id_user=${id}`)
+      query.push(`UPDATE usersProfile SET ${paramsProfile.map(v => `${v.keys} = '${v.value}'`).join(' , ')} WHERE id_user=${id}`)
     }
     console.log(query)
     runQuery(`${query.map((v) => v).join(';')}`, (err, results, fields) => {

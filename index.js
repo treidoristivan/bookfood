@@ -2,18 +2,25 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const app = express()
 
-/* Import ROUTES */
+/* Import Routes */
 const { Users } = require('./src/routes/users')
 const { Restaurants } = require('./src/routes/restaurants')
 const { Items } = require('./src/routes/items')
 const { ItemsCategories } = require('./src/routes/itemsCategories')
 const { Cart } = require('./src/routes/cart')
 
-/* Middleware */
+/* Import Controllers */
+const { TopUp } = require('./src/controllers/users')
+
+/* Import Middleware */
+const { AuthToken } = require('./src/middleware/AuthToken')
+
+/* Set Middleware */
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-/* Set ROUTES */
+/* Set Routes */
+app.post('/topup', AuthToken, TopUp)
 app.use('/users', Users)
 app.use('/restaurants', Restaurants)
 app.use('/items', Items)

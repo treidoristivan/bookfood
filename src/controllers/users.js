@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { runQuery } = require('../config/db')
-const { GetUser, RegisterUser, UpdateProfile, GetProfile, DeleteUser } = require('../models/users')
+const { GetUser, RegisterUser, VerifyUser, VerifiedUser, ChangePassword, UpdateUser, GetProfile, DeleteUser } = require('../models/users')
 const { validateUsernamePassword } = require('../utility/validate')
 
 require('dotenv').config()
@@ -113,7 +113,7 @@ exports.UpdateUser = async (req, res, next) => {
       }
       params.push({ keys: 'password', value: bcrypt.hashSync(NewPassword) })
     }
-    const update = await UpdateProfile(id, params)
+    const update = await UpdateUser(id, params)
     if (update) {
       res.send({
         success: true,
@@ -139,6 +139,24 @@ exports.DeleteUser = async (req, res, next) => {
     }
     res.status(200).send({
       success: true,
+      msg: 'Success Delete Your User'
+    })
+  } catch (e) {
+    res.status(202).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}
+
+exports.DeleteAccount = async (req, res, next) => {
+  const { id } = req.auth
+  try {
+    if (!(await DeleteUser(id))) {
+      throw new Error('Failed to Delete Account')
+    }
+    res.status(200).send({
+      success: true,
       msg: 'Success Delete Your Account'
     })
   } catch (e) {
@@ -155,7 +173,7 @@ exports.TopUp = async (req, res, next) => {
       throw new Error('Nominal Top Up is Required')
     }
     const idUser = req.auth.id
-    const balance = await UpdateProfile(idUser, [{ key: 'balance', value: req.body.nominal }])
+    const balance = await UpdateUser(idUser, [{ key: 'balance', value: req.body.nominal }])
     if (balance) {
       res.send({
         success: true,

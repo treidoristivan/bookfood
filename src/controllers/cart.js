@@ -1,9 +1,9 @@
-const { getCart, AddItems } = require('../models/cart')
-const { GetItems} = require('../models/items')
+const { GetCart, AddItems } = require('../models/cart')
+const { GetItems } = require('../models/items')
 exports.GetAllCart = async (req, res, next) => {
   try {
     const { id } = req.auth
-    const cart = await getCart(id)
+    const cart = await GetCart(id)
     if (cart.length > 0) {
       return res.status(100).send({
         success: true,

@@ -148,3 +148,27 @@ exports.DeleteUser = async (req, res, next) => {
     })
   }
 }
+
+exports.TopUp = async (req, res, next) => {
+  try {
+    if (!req.body.nominal) {
+      throw new Error('Nominal Top Up is Required')
+    }
+    const idUser = req.auth.id
+    const balance = await UpdateProfile(idUser, [{ key: 'balance', value: req.body.nominal }])
+    if (balance) {
+      res.send({
+        success: true,
+        msg: `Top Up Success, Thanks You ${req.auth.username} !`
+      })
+    } else {
+      throw new Error(`Top Up Failed, Try Again ${req.auth.username} ?`)
+    }
+  } catch (e) {
+    console.log(e)
+    res.send({
+      success: false,
+      msg: e.message
+    })
+  }
+}

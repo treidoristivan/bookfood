@@ -1,4 +1,5 @@
 const { runQuery } = require('../config/db')
+const uuid = require('uuid').v1
 
 exports.GetUser = (id) => {
   return new Promise((resolve, reject) => {
@@ -70,6 +71,57 @@ exports.VerifyUser = (code) => {
   })
 }
 
+exports.VerifiedUser = (username) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`SELECT id,username FROM users WHERE username='${username}'`, (err, results, fields) => {
+      if (err) {
+        return reject(new Error(err))
+      }
+      if (results[1].length > 0 && results[1][0]) {
+        const codeVerify = uuid()
+        const idUser = results[1][0].id
+        runQuery(`UPDATE usersProfile SET code_verify='${codeVerify}' WHERE id_user=${idUser}`, (err, results, fields) => {
+          if (err) {
+            return reject(new Error(err))
+          }
+          if (results[1].affectedRows) {
+            return resolve({ status: true, codeVerify })
+          } else {
+            return reject(new Error('Failed Request Code Verify'))
+          }
+        })
+      } else {
+        return reject(new Error('Username is Required'))
+      }
+    })
+  })
+}
+exports.ChangePassword = (code, password) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`SELECT id_user from usersProfile WHERE code_verify= '${code}'`,
+      (err, results, fields) => {
+        if (!err) {
+          if (results[1][0] && results[1][0].id_user) {
+            const idUser = results[1][0].id_user
+            runQuery(`
+              UPDATE users SET password='${password}' WHERE id = ${idUser};
+              UPDATE usersProfile SET code_verify = ${null} WHERE id_user =${idUser}
+            `, (err, results, fields) => {
+              if (err) {
+                reject(new Error(err))
+              } else {
+                resolve(true)
+              }
+            })
+          } else {
+            return reject(new Error('Code Verification Wrong'))
+          }
+        } else {
+          return reject(new Error(err))
+        }
+      })
+  })
+}
 exports.UpdateUser = (id, params) => {
   return new Promise((resolve, reject) => {
     const query = []

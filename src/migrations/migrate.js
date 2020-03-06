@@ -5,11 +5,13 @@ module.exports = {
   table: [
     ...require('./users').queryTable,
     ...require('./restaurants').queryTable,
-    ...require('./items').queryTable
+    ...require('./items').queryTable,
+    ...require('./cart').queryTable
   ],
   foreign: [
     ...require('./users').queryForeign,
     ...require('./restaurants').queryForeign,
-    ...require('./items').queryForeign
+    ...require('./items').queryForeign,
+    ...require('./cart').queryForeign
   ]
 }

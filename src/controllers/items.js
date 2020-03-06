@@ -1,7 +1,7 @@
 const { GetItems, CreateItems, UpdateItems, DeleteItems } = require('../models/items')
 const { GetRestaurants } = require('../models/restaurants')
 const { GetUsers } = require('../models/users')
-const { GetCategory } = require('../models/itemCategories')
+const { GetCategories } = require('../models/itemsCategories')
 
 exports.GetAllItems = async (req, res, next) => {
   try {
@@ -57,7 +57,7 @@ exports.CreateItems = async (req, res, next) => {
       throw new Error('id_restaurant, id_category, name, and price is required')
     }
     const dataRestaurant = await GetRestaurants(req.body.id_restaurant)
-    const dataCategory = await GetCategory(req.body.id_category)
+    const dataCategory = await GetCategories(req.body.id_category)
     const dataUser = await GetUsers(req.auth.id)
     if (!(dataRestaurant) || !(dataCategory)) {
       throw new Error(!(dataRestaurant) ? `Restaurants With id ${req.body.id_restaurant} Not Exists` : `Category With id ${req.body.id_category} Not Exists`)
@@ -68,8 +68,8 @@ exports.CreateItems = async (req, res, next) => {
         msg: 'To add Item to this Restaurant You Must Owner of Restaurant Or Superadmin'
       })
     }
-    let columns = []
-    let values = []
+    const columns = []
+    const values = []
     const fillAble = ['id_restaurant', 'id_category', 'name', 'price', 'images', 'decription']
     Object.keys(req.body).forEach((v) => {
       if (v && fillAble.includes(v) && req.body[v]) {

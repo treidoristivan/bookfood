@@ -4,6 +4,8 @@ const { runQuery } = require('../config/db')
 const { GetUser, RegisterUser, UpdateProfile, GetProfile, DeleteUser } = require('../models/users')
 const { validateUsernamePassword } = require('../utility/validate')
 
+require('dotenv').config()
+
 exports.GetProfile = async (req, res, next) => {
   try {
     const profileUser = await GetProfile(req.auth.id)
@@ -55,10 +57,10 @@ exports.LoginUser = async (req, res, next) => {
     const { username, password } = req.body
     if (username && password) {
       const dataLogin = await new Promise((resolve, reject) => {
-        runQuery(`SELECT _id,username,password FROM users WHERE username='${username}'`,
+        runQuery(`SELECT id,username,password FROM users WHERE username='${username}'`,
           (err, results) => {
             if (!err && results[1].length > 0 && bcrypt.compareSync(password, results[1][0].password)) {
-              const userData = { id: results[1][0]._id, username }
+              const userData = { id: results[1][0].id, username }
               resolve(userData)
             } else {
               reject(new Error(err || 'Username Or Password Wrong'))

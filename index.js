@@ -6,7 +6,7 @@ const app = express()
 const { Users } = require('./src/routes/users')
 const { Restaurants } = require('./src/routes/restaurants')
 const { Items } = require('./src/routes/items')
-const { ItemsCategories } = require('./src/routes/ItemsCategories')
+const { ItemsCategories } = require('./src/routes/itemsCategories')
 
 /* Middleware */
 app.use(bodyParser.urlencoded({ extended: false }))

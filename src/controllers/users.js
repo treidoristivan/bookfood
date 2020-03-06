@@ -172,3 +172,26 @@ exports.TopUp = async (req, res, next) => {
     })
   }
 }
+
+exports.Verify = async (req, res, next) => {
+  try {
+    if (!req.query.code) {
+      throw new Error('Query Code Is Required')
+    }
+    const verify = await this.VerifyUsers(req.query.code)
+    if (verify) {
+      res.status(100).send({
+        success: true,
+        msg: 'Verify Success, Already Login !'
+      })
+    } else {
+      throw new Error('Verify Failed, Please Try Again !')
+    }
+  } catch (e) {
+    console.log(e)
+    res.status(200).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}

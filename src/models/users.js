@@ -46,7 +46,31 @@ exports.RegisterUser = (data) => {
   })
 }
 
-exports.UpdateProfile = (id, params) => {
+exports.VerifyUser = (code) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`SELECT id_user FROM usersProfile WHERE verify='${code}'`, (err, results, fields) => {
+      if (!err) {
+        if (results[1][0] && results[1][0].id_user) {
+          const idUser = results[1][0].id_user
+          runQuery(`UPDATE users SET status=1 WHERE id = ${idUser};
+          UPDATE usersProfile SET verify = ${null} WHERE id_user = ${idUser}`, (err, results, fields) => {
+            if (err) {
+              reject(new Error(err))
+            } else {
+              resolve(true)
+            }
+          })
+        } else {
+          return reject(new Error('Verification Failed, Code is Not Accepted !'))
+        }
+      } else {
+        return reject(new Error(err))
+      }
+    })
+  })
+}
+
+exports.UpdateUser = (id, params) => {
   return new Promise((resolve, reject) => {
     const query = []
     const paramsUsers = params.slice().filter(v => ['username', 'password'].includes(v.keys))

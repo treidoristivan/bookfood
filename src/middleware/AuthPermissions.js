@@ -1,9 +1,9 @@
 const { runQuery } = require('../config/db')
 
-exports.permission = {
+module.exports = {
   admin: async (req, res, next) => {
     try {
-      if (await checkPermission(req.auth, 'admin')) {
+      if (await checkPermissions(req.auth, 'admin')) {
         console.log('next')
         next()
       } else {
@@ -18,7 +18,7 @@ exports.permission = {
   },
   superadmin: async (req, res, next) => {
     try {
-      if (await checkPermission(req.auth, 'superadmin')) {
+      if (await checkPermissions(req.auth, 'superadmin')) {
         console.log('next')
         next()
       } else {
@@ -33,7 +33,7 @@ exports.permission = {
   }
 }
 
-const checkPermission = (auth, role) => {
+const checkPermissions = (auth, role) => {
   return new Promise((resolve, reject) => {
     if (auth) {
       runQuery(`SELECT is_${role}${role === 'admin' ? 'is_superadmin' : ''} FROM users WHERE username='${auth.username}'`,

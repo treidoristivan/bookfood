@@ -11,6 +11,7 @@ const { Cart } = require('./src/routes/cart')
 
 /* Import Controllers */
 const { TopUp } = require('./src/controllers/users')
+const { Verify } = require('./src/controllers/users')
 
 /* Import Middleware */
 const { AuthToken } = require('./src/middleware/AuthToken')
@@ -21,6 +22,7 @@ app.use(bodyParser.json())
 
 /* Set Routes */
 app.post('/topup', AuthToken, TopUp)
+app.post('/verify', Verify)
 app.use('/users', Users)
 app.use('/restaurants', Restaurants)
 app.use('/items', Items)

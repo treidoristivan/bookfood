@@ -196,7 +196,7 @@ exports.Verify = async (req, res, next) => {
     if (!req.query.code) {
       throw new Error('Query Code Is Required')
     }
-    const verify = await this.VerifyUsers(req.query.code)
+    const verify = await VerifyUser(req.query.code)
     if (verify) {
       res.status(100).send({
         success: true,
@@ -208,6 +208,48 @@ exports.Verify = async (req, res, next) => {
   } catch (e) {
     console.log(e)
     res.status(200).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}
+exports.ForgotPassword = async (req, res, next) => {
+  try {
+    if (!req.query.code) {
+      if (!req.body.username) {
+        throw new Error('Please Defined Username to Create New Password')
+      }
+      const code = await VerifiedUser(req.body.username)
+      if (code.status) {
+        res.status(200).send({
+          status: false,
+          code_verify: code.codeVerify,
+          msg: 'Register Success, Please Verify Your Account',
+          url_to_verify: `${process.env.APP_URL}/forgot-password?code=${code.codeVerify}`
+        })
+      } else {
+        throw new Error('Failed to Verify Your Account')
+      }
+    } else {
+      if (!req.body.new_password || !req.body.confirm_password) {
+        throw new Error('Please Defined new_password and confirm_password to update password')
+      }
+      if (req.body.new_password !== req.body.confirm_password) {
+        throw new Error('Confirm Password not Match')
+      }
+      const changePassword = await ChangePassword(req.query.code, bcrypt.hashSync(req.body.new_password))
+      if (changePassword) {
+        return res.status(200).send({
+          success: true,
+          msg: 'Success Change Password'
+        })
+      } else {
+        throw new Error('Failed To Change Password')
+      }
+    }
+  } catch (e) {
+    console.log(e)
+    res.status(202).send({
       success: false,
       msg: e.message
     })

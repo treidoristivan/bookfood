@@ -1,27 +1,38 @@
 const users = `
-CREATE TABLE IF NOT EXISTS users(
-  id int(11) PRIMARY KEY AUTO_INCREMENT, 
-  username varchar(25),
-  password varchar(25)
+  CREATE TABLE IF NOT EXISTS users(
+  id int(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(40) NOT NULL,
+  password VARCHAR(100) NOT NULL,
+  code_verify VARCHAR(40) DEFAULT NULL,
+  is_admin  TINYINT(1) DEFAULT 0,
+  is_superadmin   TINYINT(1) DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
 )
 `
-const usersDetail = `
-CREATE TABLE IF NOT EXISTS usersDetail(
-  id int(11) PRIMARY KEY AUTO_INCREMENT, 
-  idUsers int(11),
-  name varchar(50),
-  birth_date date,
-  email varchar(50),
-  gender ENUM('L','P','other') DEFAULT 'other',
-  images text
-)
+const usersProfile = `
+  CREATE TABLE IF NOT EXISTS usersProfile(
+    id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id_user INT(11) UNSIGNED NOT NULL,
+    fullname VARCHAR(70) NULL,
+    email VARCHAR(40) NULL,
+    gender ENUM('women','men') DEFAULT NULL,
+    address TEXT DEFAULT NULL,
+    picture TEXT DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
+  )
 `
-const usersAddress = `
-CREATE TABLE IF NOT EXISTS usersAddress(
-  id int(11) PRIMARY KEY AUTO_INCREMENT, 
-  idUsers int(11),
-  address text,
-  isPrimary tinyint(1)
-)
+const usersProfileForeign = `
+  ALTER TABLE usersProfile
+  ADD CONSTRAINT FK_User
+    FOREIGN KEY (id_user) REFERENCES users(id)
+    ON DELETE CASCADE 
 `
-module.exports = [users, usersDetail, usersAddress]
+exports.queryTable = [
+  users,
+  usersProfile
+]
+exports.queryForeign = [
+  usersProfileForeign
+]

@@ -1,7 +1,15 @@
-module.exports = [
-  ...require('./users'),
-  ...require('./category'),
-  ...require('./items'),
-  ...require('./itemsReview'),
-  ...require('./restaurant')
-]
+
+/* Add All Query to Create Tables Into Array */
+
+module.exports = {
+  table: [
+    ...require('./users').queryTable,
+    ...require('./restaurants').queryTable,
+    ...require('./items').queryTable
+  ],
+  foreign: [
+    ...require('./users').queryForeign,
+    ...require('./restaurants').queryForeign,
+    ...require('./items').queryForeign
+  ]
+}

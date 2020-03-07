@@ -85,7 +85,7 @@ exports.GetDetailReview = async (req, res, next) => {
       res.status(200).send({
         success: true,
         data: false,
-        msg: `Review With id ${req.params.id} Not Exists`
+        msg: `You Never Review With id ${req.params.id}`
       })
     }
   } catch (e) {
@@ -100,14 +100,13 @@ exports.GetDetailReview = async (req, res, next) => {
 exports.CreateReview = async (req, res, next) => {
   try {
     const idUser = req.auth.id
-    if (!(req.body.id_item || req.body.rating || req.body.review)) {
-      throw new Error('Required id_item, rating and review')
+    if (!(req.body.idItem || req.body.rating || req.body.review)) {
+      throw new Error('Required idItem, rating and review')
     }
     if (!([1, 2, 3, 4, 5].includes(parseInt(req.body.rating)))) {
       throw new Error('Rating must be number with value 1-5')
     }
-    const dataItem = await GetItem(req.body.id_item)
-    console.log(dataItem)
+    const dataItem = await GetItem(req.body.idItem)
     if (!dataItem) {
       throw new Error('Item Not Exists')
     }
@@ -135,10 +134,13 @@ exports.UpdateReview = async (req, res, next) => {
     if (!(Object.keys(req.body).length > 0)) {
       throw new Error('Please Defined What you want to update')
     }
+    if (req.body.rating && !([1, 2, 3, 4, 5].includes(parseInt(req.body.rating)))) {
+      throw new Error('Rating must be number with value 1-5')
+    }
     const { id } = req.params
     const dataReview = await GetReview(id, req.auth.id)
     if (!(dataReview)) {
-      throw new Error(`Never Review Item With id ${id}`)
+      throw new Error(`You Never Review Item With id ${id}`)
     }
     const fillAble = ['rating', 'review']
     const params = fillAble.map((v) => {
@@ -148,12 +150,18 @@ exports.UpdateReview = async (req, res, next) => {
         return null
       }
     }).filter(v => v)
-    const update = await UpdateReview(id, params)
-    if (update) {
-      res.status(201).send({
-        success: true,
-        msg: `Success Update Review With id ${id}`
-      })
+    if (params.length > 0) {
+      const update = await UpdateReview(id, params)
+      if (update) {
+        res.status(201).send({
+          success: true,
+          msg: `Success Update Review With id ${id}`
+        })
+      } else {
+        throw new Error('Failed to Update Review!')
+      }
+    } else {
+      throw new Error('Something Wrong with your sented data')
     }
   } catch (e) {
     res.status(202).send({

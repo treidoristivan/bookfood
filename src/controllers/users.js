@@ -1,21 +1,20 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { runQuery } = require('../config/db')
-const { GetUser, RegisterUser, VerifyUser, VerifiedUser, ChangePassword, UpdateUser, GetProfile, DeleteUser } = require('../models/users')
+const { GetUser, CreateUser, VerifyUser, GetCodeVerify, ChangePassword, UpdateProfile, GetProfile, DeleteUser } = require('../models/users')
 const { validateUsernamePassword } = require('../utility/validate')
-
 require('dotenv').config()
-
 exports.GetProfile = async (req, res, next) => {
   try {
     const profileUser = await GetProfile(req.auth.id)
     if (profileUser) {
-      res.status(200).send({
+      return res.status(200).send({
         success: true,
         data: profileUser
       })
+    } else {
+      throw new Error('Your Account Has been deleted')
     }
-    throw new Error('Something Wrong')
   } catch (e) {
     res.status(202).send({
       success: false,
@@ -30,11 +29,13 @@ exports.RegisterUser = async (req, res, next) => {
       const validate = validateUsernamePassword(username, password)
       if (validate.val) {
         const hashPassword = bcrypt.hashSync(password)
-        const statusRegister = await RegisterUser({ username, password: hashPassword })
-        if (statusRegister) {
+        const statusRegister = await CreateUser({ username, password: hashPassword }, false)
+        if (statusRegister && statusRegister.status) {
           res.status(201).send({
             success: true,
-            msg: 'Register Success, Please Login'
+            code_verify: statusRegister.codeVerify,
+            msg: 'Register Success, Please Verify Your Account',
+            url_to_verify: `${process.env.APP_URL}/verify?code=${statusRegister.codeVerify}`
           })
         }
       } else {
@@ -57,13 +58,16 @@ exports.LoginUser = async (req, res, next) => {
     const { username, password } = req.body
     if (username && password) {
       const dataLogin = await new Promise((resolve, reject) => {
-        runQuery(`SELECT id,username,password FROM users WHERE username='${username}'`,
+        runQuery(`SELECT id,username,password,status FROM users WHERE username='${username}'`,
           (err, results) => {
             if (!err && results[1].length > 0 && bcrypt.compareSync(password, results[1][0].password)) {
+              if (!(results[1][0].status)) {
+                return reject(new Error('Please Verify Your Account'))
+              }
               const userData = { id: results[1][0].id, username }
-              resolve(userData)
+              return resolve(userData)
             } else {
-              reject(new Error(err || 'Username Or Password Wrong'))
+              return reject(new Error(err || 'Username Or Password Wrong'))
             }
           })
       })
@@ -88,39 +92,43 @@ exports.LoginUser = async (req, res, next) => {
 }
 
 exports.UpdateUser = async (req, res, next) => {
-  const { id } = req.auth
-  const fillable = ['username', 'fullname', 'email', 'gender', 'address', 'picture']
-  const params = Object.keys(req.body).map((v) => {
-    if (v && fillable.includes(v) && req.body[v]) {
-      return { keys: v, value: req.body[v] }
-    } else {
-      return null
-    }
-  }).filter(o => o)
   try {
+    const { id } = req.auth
+    const fillable = ['username', 'fullname', 'email', 'gender', 'address', 'picture']
+    const params = Object.keys(req.body).map((v) => {
+      if (v && fillable.includes(v) && req.body[v]) {
+        return { key: v, value: req.body[v] }
+      } else {
+        return null
+      }
+    }).filter(o => o)
+
     if (req.body.old_password) {
       const user = await GetUser(id)
       const oldPassword = user.password
-      const { NewPassword, ConfirmPassword } = req.body
-      if (!(NewPassword && ConfirmPassword)) {
+      if (!(req.body.new_password && req.body.confirm_password)) {
         throw new Error('New Password or Confirm Password Not Defined')
       }
-      if (!(NewPassword === ConfirmPassword)) {
+      if (!(req.body.new_password === req.body.confirm_password)) {
         throw new Error('Confirm Password Not Match')
       }
       if (!(bcrypt.compareSync(req.body.old_password, oldPassword))) {
         throw new Error('Old Password Not Match')
       }
-      params.push({ keys: 'password', value: bcrypt.hashSync(NewPassword) })
+      params.push({ key: 'password', value: bcrypt.hashSync(req.body.new_password) })
     }
-    const update = await UpdateUser(id, params)
-    if (update) {
-      res.send({
-        success: true,
-        msg: `User ${req.auth.username} has been updated`
-      })
+    if (params.length > 0) {
+      const update = await UpdateProfile(id, params)
+      if (update) {
+        res.send({
+          success: true,
+          msg: `User ${req.auth.username} has been updated`
+        })
+      } else {
+        throw new Error('Failed to update user!')
+      }
     } else {
-      throw new Error('Failed to update user!')
+      throw new Error('Something Wrong with your sented data')
     }
   } catch (e) {
     console.log(e)
@@ -131,29 +139,11 @@ exports.UpdateUser = async (req, res, next) => {
   }
 }
 
-exports.DeleteUser = async (req, res, next) => {
-  const { id } = req.auth
-  try {
-    if (!(await DeleteUser(id))) {
-      throw new Error('Failed to Delete User')
-    }
-    res.status(200).send({
-      success: true,
-      msg: 'Success Delete Your User'
-    })
-  } catch (e) {
-    res.status(202).send({
-      success: false,
-      msg: e.message
-    })
-  }
-}
-
 exports.DeleteAccount = async (req, res, next) => {
-  const { id } = req.auth
   try {
+    const { id } = req.auth
     if (!(await DeleteUser(id))) {
-      throw new Error('Failed to Delete Account')
+      throw new Error('Failed to Delete Your Account')
     }
     res.status(200).send({
       success: true,
@@ -166,25 +156,42 @@ exports.DeleteAccount = async (req, res, next) => {
     })
   }
 }
+exports.DeleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params.id
+    if (!(await DeleteUser(id))) {
+      throw new Error('Failed to Delete User')
+    }
+    res.status(200).send({
+      success: true,
+      msg: 'Success to Delete User'
+    })
+  } catch (e) {
+    res.status(202).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}
 
 exports.TopUp = async (req, res, next) => {
   try {
-    if (!req.body.nominal) {
-      throw new Error('Nominal Top Up is Required')
+    if (!req.body.nominal_topup) {
+      throw new Error('Please Entry nominal_topup')
     }
-    const idUser = req.auth.id
-    const balance = await UpdateUser(idUser, [{ key: 'balance', value: req.body.nominal }])
-    if (balance) {
+    const dataUser = await GetProfile(req.auth.id)
+    const updateBalance = await UpdateProfile(req.auth.id, [{ key: 'balance', value: parseFloat(dataUser.balance) + parseFloat(req.body.nominal_topup) }])
+    if (updateBalance) {
       res.send({
         success: true,
-        msg: `Top Up Success, Thanks You ${req.auth.username} !`
+        msg: `Success TopUp for ${req.auth.username}`
       })
     } else {
-      throw new Error(`Top Up Failed, Try Again ${req.auth.username} ?`)
+      throw new Error('Failed to TopUp!')
     }
   } catch (e) {
     console.log(e)
-    res.send({
+    res.status(202).send({
       success: false,
       msg: e.message
     })
@@ -194,38 +201,39 @@ exports.TopUp = async (req, res, next) => {
 exports.Verify = async (req, res, next) => {
   try {
     if (!req.query.code) {
-      throw new Error('Query Code Is Required')
+      throw new Error('Required Query code')
     }
     const verify = await VerifyUser(req.query.code)
     if (verify) {
-      res.status(100).send({
+      res.status(200).send({
         success: true,
-        msg: 'Verify Success, Already Login !'
+        msg: 'Your Account Is Verify Please Login'
       })
     } else {
-      throw new Error('Verify Failed, Please Try Again !')
+      throw new Error('Failed to Verify Your Account')
     }
   } catch (e) {
     console.log(e)
-    res.status(200).send({
+    res.status(202).send({
       success: false,
       msg: e.message
     })
   }
 }
+
 exports.ForgotPassword = async (req, res, next) => {
   try {
     if (!req.query.code) {
       if (!req.body.username) {
         throw new Error('Please Defined Username to Create New Password')
       }
-      const code = await VerifiedUser(req.body.username)
+      const code = await GetCodeVerify(req.body.username)
       if (code.status) {
         res.status(200).send({
           status: false,
+          msg: 'Request Success, You Can change your password',
           code_verify: code.codeVerify,
-          msg: 'Register Success, Please Verify Your Account',
-          url_to_verify: `${process.env.APP_URL}/forgot-password?code=${code.codeVerify}`
+          url_to_change: `${process.env.APP_URL}/forgot-password?code=${code.codeVerify}`
         })
       } else {
         throw new Error('Failed to Verify Your Account')

@@ -10,11 +10,26 @@ exports.GetItems = (id, params) => {
         return resolve(results[1][0])
       })
     } else {
-      runQuery('SELECT * FROM items', (err, results, fields) => {
+      const { perPage, currentPage, search, sort } = params
+      const condition = `
+          ${search && `WHERE ${search.map(v => `${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
+          ORDER BY ${sort.map(v => `${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
+          ${(parseInt(currentPage) && parseInt(perPage)) ? `LIMIT ${parseInt(perPage)} 
+          OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}
+         `
+      runQuery(`
+        SELECT COUNT(*) AS total from items ${condition.substring(0, condition.indexOf('LIMIT'))};
+        SELECT * from items ${condition}
+      `, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
-        return resolve(results[1])
+        if (results[1][0]) {
+          const { total } = results[1][0]
+          return resolve({ results: results[2], total })
+        } else {
+          return resolve({ results: [], total: 0 })
+        }
       })
     }
   })
@@ -34,13 +49,13 @@ exports.CreateItems = (data) => {
 }
 exports.UpdateItems = (id, params) => {
   return new Promise((resolve, reject) => {
-    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id = ${id}`, (err, results, fields) => {
+    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id=${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))
       }
       console.log(results[1])
-      return resolve(true)
+      return resolve(results[1].affcectedRows)
     })
   })
 }
@@ -53,7 +68,7 @@ exports.DeleteItems = (id) => {
         return reject(new Error(err))
       }
       console.log(results[1])
-      return resolve(true)
+      return resolve(results[1].affcectedRows)
     })
   })
 }

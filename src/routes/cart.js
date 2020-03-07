@@ -1,8 +1,9 @@
-const Cart = require('express').Router()
-const { GetAllCart, AddItems } = require('../controllers/cart')
-const CheckAuthToken = require('../middleware/AuthToken')
+const Carts = require('express').Router()
+const checkAuthToken = require('../middleware/authMiddleware')
+const { GetAllCart, AddItem, UpdateItemCart, RemoveItemCart } = require('../controllers/cart')
 
-Cart.get('/', CheckAuthToken, GetAllCart)
-Cart.post('/', CheckAuthToken, AddItems)
-
-module.exports = { Cart }
+Carts.get('/', checkAuthToken, GetAllCart)
+Carts.post('/', checkAuthToken, AddItem)
+Carts.put('/:id', checkAuthToken, UpdateItemCart)
+Carts.delete('/:id', checkAuthToken, RemoveItemCart)
+module.exports = Carts

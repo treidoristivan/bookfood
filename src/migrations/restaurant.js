@@ -1,5 +1,5 @@
-const restaurants = `
-  CREATE TABLE IF NOT EXISTS restaurants(
+const restaurantT = `
+  CREATE TABLE IF NOT EXISTS restaurant(
   id int(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   idOwner INT(11) UNSIGNED NOT NULL,
   name VARCHAR(40) NOT NULL,
@@ -10,15 +10,15 @@ const restaurants = `
   upated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
 )
 `
-const restaurantsForeign = `
-  ALTER TABLE restaurants
+const restaurantF = `
+  ALTER TABLE restaurant
   ADD CONSTRAINT FK_Owner
     FOREIGN KEY (idOwner) REFERENCES users(id)
     ON DELETE CASCADE
 `
 exports.queryTable = [
-  restaurants
+  restaurantT
 ]
 exports.queryForeign = [
-  restaurantsForeign
+  restaurantF
 ]

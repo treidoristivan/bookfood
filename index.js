@@ -2,32 +2,36 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const app = express()
 
-/* Import Routes */
-const { Users } = require('./src/routes/users')
-const { Restaurants } = require('./src/routes/restaurants')
-const { Items } = require('./src/routes/items')
-const { ItemsCategories } = require('./src/routes/itemsCategories')
-const { Cart } = require('./src/routes/cart')
-
 /* Import Controllers */
-const { TopUp } = require('./src/controllers/users')
-const { Verify } = require('./src/controllers/users')
+const { TopUp, Verify, ForgotPassword } = require('./src/controllers/users')
+const { CheckOutItem } = require('./src/controllers/cart')
 
-/* Import Middleware */
-const { AuthToken } = require('./src/middleware/AuthToken')
+/* Import ROUTES */
+const Users = require('./src/routes/users')
+const Restaurant = require('./src/routes/restaurant')
+const itemCategories = require('./src/routes/itemCategories')
+const items = require('./src/routes/items')
+const cart = require('./src/routes/cart')
+const Reviews = require('./src/routes/reviews')
 
-/* Set Middleware */
+/* Middleware */
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-/* Set Routes */
-app.post('/topup', AuthToken, TopUp)
+/* Import Middleware */
+const checkAuthToken = require('./src/middleware/authMiddleware')
+
+/* Set ROUTES */
+app.post('/topup', checkAuthToken, TopUp)
 app.post('/verify', Verify)
+app.post('/forgot-password', ForgotPassword)
+app.get('/checkout', checkAuthToken, CheckOutItem)
+app.use('/reviews', Reviews)
 app.use('/users', Users)
-app.use('/restaurants', Restaurants)
-app.use('/items', Items)
-app.use('/itemscategories', ItemsCategories)
-app.use('/cart', Cart)
+app.use('/restaurant', Restaurant)
+app.use('/categories', itemCategories)
+app.use('/items', items)
+app.use('/cart', cart)
 
 /* Server Listen */
 const PORT = 4444

@@ -1,9 +1,9 @@
 const { runQuery } = require('../config/db')
 
-exports.GetCategories = (id, params) => {
+exports.GetRestaurants = (id, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
-      runQuery(`SELECT * FROM itemCategories WHERE id=${id}`, (err, results, fields) => {
+      runQuery(`SELECT * FROM restaurants WHERE id =${id}`, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
@@ -18,8 +18,8 @@ exports.GetCategories = (id, params) => {
           OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}
          `
       runQuery(`
-        SELECT COUNT(*) AS total from itemCategories ${condition.substring(0, condition.indexOf('LIMIT'))};
-        SELECT * from itemCategories ${condition}
+        SELECT COUNT(*) AS total from restaurants ${condition.substring(0, condition.indexOf('LIMIT'))};
+        SELECT * from restaurants ${condition}
       `, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
@@ -35,13 +35,24 @@ exports.GetCategories = (id, params) => {
   })
 }
 
-exports.CreateCategories = (name) => {
+exports.CreateRestaurant = (data) => {
   return new Promise((resolve, reject) => {
-    runQuery(`SELECT COUNT(*) as total FROM itemCategories WHERE name='${name}'`, (err, results, fields) => {
-      if (err || results[1][0].total) {
-        return reject(new Error(err || 'Categories Already Exists'))
+    const columns = []
+    const values = []
+    Object.keys(data).forEach((v) => {
+      if (v && ['idOwner', 'name', 'logo', 'location', 'decription'].includes(v) && data[v]) {
+        columns.push(v)
+        values.push(data[v])
       }
-      runQuery(`INSERT INTO itemCategories(name) VALUES('${name}')`, (err, results, fields) => {
+    })
+    runQuery(`SELECT COUNT(*) AS total FROM users WHERE id=${data.idOwner}`, (err, results, fields) => {
+      if (err || !results[1][0].total) {
+        return resolve(err || 'Owner id Not Registered')
+      }
+      runQuery(`
+      INSERT INTO restaurants(${columns.map(v => v).join(',')}) VALUES(${values.map(v => `'${v}'`).join(',')});
+      UPDATE users SET isAdmin = 1 WHERE id=${data.idOwner}
+    `, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
@@ -52,32 +63,27 @@ exports.CreateCategories = (name) => {
   })
 }
 
-exports.UpdateCategories = (id, name) => {
+exports.UpdateRestaurant = (id, params) => {
   return new Promise((resolve, reject) => {
-    runQuery(`SELECT COUNT(*) as total FROM itemCategories WHERE name='${name}'`, (err, results, fields) => {
-      if (err || results[1][0].total) {
-        return reject(new Error(err || 'Categories Already Exists'))
-      }
-      runQuery(`UPDATE itemCategories SET name = '${name}' WHERE id=${id}`, (err, results, fields) => {
-        if (err) {
-          console.log(err)
-          return reject(new Error(err))
-        }
-        console.log(results[1])
-        return resolve(results[1].affectedRows)
-      })
-    })
-  })
-}
-
-exports.DeleteCategories = (id) => {
-  return new Promise((resolve, reject) => {
-    runQuery(`DELETE FROM itemCategories WHERE id=${id}`, (err, results, fields) => {
+    runQuery(`UPDATE restaurants SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id = ${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))
       }
-      return resolve(results[1].affectedRows)
+      console.log(results[1])
+      return resolve(true)
+    })
+  })
+}
+
+exports.DeleteRestaurant = (id) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`DELETE FROM restaurants WHERE id=${id}`, (err, results, fields) => {
+      if (err) {
+        console.log(err)
+        return reject(new Error(err))
+      }
+      return resolve(true)
     })
   })
 }

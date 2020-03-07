@@ -1,47 +1,43 @@
-const cartTable = `
+
+const cartT = `
 CREATE TABLE IF NOT EXISTS cart(
-id int(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-id_user int(11) UNSIGNED NOT NULL,
-id_item int(11) UNSIGNED NOT NULL,
-totalItems int(11) UNSIGNED DEFAULT 0,
-totalPrice decimal(10,2) UNSIGNED NOT NULL,
-checkOut tinyint default 0,
-create_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-update_at DATETIME ON UPDATE CURRENT_TIMESTAMP
-)`
-
-const cartTransactionTable = `
-CREATE TABLE IF NOT EXISTS cartTransaction(
-  id int(11) UNSIGNED PRIMARY KEY AUTO INCREMENT,
-  id_user int(11) UNSIGNED NOT NULL,
-  listItems text,
-  totalPrice decimal(10,2) UNSIGNED NOT NULL,
-  create_at DATETIME DEFAULT CURRENT_TIMESTAMP
+id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+idUser INT(11) UNSIGNED NOT NULL,
+idItem INT(11) UNSIGNED NOT NULL,
+nameItem VARCHAR(60) NOT NULL,
+totalItem INT(11) UNSIGNED DEFAULT 0,
+totalPrice DECIMAL(10,2) UNSIGNED NOT NULL,
+checkOut TINYINT(1) DEFAULT 0,
+created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
 )
 `
-
-const cartForeign = `
-ALTER TABLE cart(
+const transcationsT = `
+CREATE TABLE IF NOT EXISTS transcations(
+  id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  idUser INT(11) UNSIGNED NOT NULL,
+  listItem TEXT,
+  totalPrice DECIMAL(10,2) UNSIGNED NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+`
+const cartF = `
+ALTER TABLE cart
 ADD CONSTRAINT FK_User
-  FOREIGN KEY (id_user) REFERENCES users(id)
+  FOREIGN KEY (idUser) REFERENCES users(id)
   ON DELETE CASCADE
-  ON UPDATE CASCADE
-)
 `
-const cartTransactionForeign = `
-ALTER TABLE cartTransaction(
-ADD CONSTRAINT FK_user
-  FOREIGN KEY (id_user) REFERENCES users(id)
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-)
+const transcationsF = `
+  ALTER TABLE transcations
+  ADD CONSTRAINT FK_User
+    FOREIGN KEY (idUser) REFERENCES users(id)
+    ON DELETE CASCADE
 `
 exports.queryTable = [
-  cartTable,
-  cartTransactionTable
+  cartT,
+  transcationsT
 ]
-
 exports.queryForeign = [
-  cartForeign,
-  cartTransactionForeign
+  cartF,
+  transcationsF
 ]

@@ -1,11 +1,14 @@
 const { runQuery } = require('../config/db')
 
-exports.GetRestaurants = (id, params) => {
+exports.GetReview = (id, idUser, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
-      runQuery(`SELECT * FROM restaurants WHERE id=${id}`, (err, results, fields) => {
+      runQuery(`SELECT * FROM itemReviews WHERE id =${id} ${idUser ? `AND idUser =${parseInt(idUser)}` : ''}`, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
+        }
+        if (!(results[1].length > 0)) {
+          return resolve(false)
         }
         return resolve(results[1][0])
       })
@@ -13,13 +16,14 @@ exports.GetRestaurants = (id, params) => {
       const { perPage, currentPage, search, sort } = params
       const condition = `
           ${search && `WHERE ${search.map(v => `${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
+          ${idUser ? `AND idUser = ${idUser}` : ''}
           ORDER BY ${sort.map(v => `${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
           ${(parseInt(currentPage) && parseInt(perPage)) ? `LIMIT ${parseInt(perPage)} 
           OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}
          `
       runQuery(`
-        SELECT COUNT(*) AS total from restaurants ${condition.substring(0, condition.indexOf('LIMIT'))};
-        SELECT * from restaurants ${condition}
+        SELECT COUNT(*) AS total from itemReviews ${condition.substring(0, condition.indexOf('LIMIT'))};
+        SELECT * from itemReviews ${condition}
       `, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
@@ -35,24 +39,13 @@ exports.GetRestaurants = (id, params) => {
   })
 }
 
-exports.RegisterRestaurant = (data) => {
+exports.CreateReview = (idUser, params) => {
   return new Promise((resolve, reject) => {
-    let columns = []
-    let values = []
-    Object.keys(data).forEach((v) => {
-      if (v && ['id_owner', 'name', 'logo', 'location', 'decription'].includes(v) && data[v]) {
-        columns.push(v)
-        values.push(data[v])
+    runQuery(`SELECT COUNT(*) as total FROM itemReviews WHERE idUser='${idUser} AND idItem=${params.idItem}'`, (err, results, fields) => {
+      if (err || results[1][0].total) {
+        return reject(new Error(err || 'Already Review this item You Can Update or Delete this review'))
       }
-    })
-    runQuery(`SELECT COUNT(*) AS total FROM users WHERE id=${data.id_owner}`, (err, results, fields) => {
-      if (err || !results[1][0].total) {
-        return resolve(err || 'Owner id Not Registered')
-      }
-      runQuery(`
-      INSERT INTO restaurants(${columns.map(v => v).join(',')}) VALUES(${values.map(v => `'${v}'`).join(',')});
-      UPDATE users SET is_admin = 1 WHERE id=${data.id_owner}
-    `, (err, results, fields) => {
+      runQuery(`INSERT INTO itemReviews(idItem,idUser,rating,review) VALUES(${params.idItem},${idUser}, ${params.rating},'${params.review}')`, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
@@ -63,27 +56,28 @@ exports.RegisterRestaurant = (data) => {
   })
 }
 
-exports.UpdateRestaurant = (id, params) => {
+exports.UpdateReview = (id, params) => {
   return new Promise((resolve, reject) => {
-    runQuery(`UPDATE restaurants SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id=${id}`, (err, results, fields) => {
+    runQuery(`UPDATE itemReviews SET ${params.map(v => `${v.key} = '${v.value}'`).join(' , ')} WHERE id=${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))
       }
       console.log(results[1])
-      return resolve(true)
+      return resolve(results[1].affectedRows)
     })
   })
 }
 
-exports.DeleteRestaurant = (id) => {
+exports.DeleteReview = (id) => {
   return new Promise((resolve, reject) => {
-    runQuery(`DELETE FROM restaurants WHERE id=${id}`, (err, results, fields) => {
+    runQuery(`DELETE FROM itemReviews WHERE id=${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))
       }
-      return resolve(true)
+      console.log(results[1])
+      return resolve(results[1].affectedRows)
     })
   })
 }

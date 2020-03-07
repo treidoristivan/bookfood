@@ -1,47 +1,61 @@
 const { runQuery } = require('../config/db')
 const uuid = require('uuid').v1
-
 exports.GetUser = (id) => {
   return new Promise((resolve, reject) => {
     runQuery(`SELECT * from users WHERE id=${id}`,
       (error, results, fields) => {
         if (error) {
-          reject(new Error(error))
+          return reject(new Error(error))
         } else {
-          resolve(results[1][0])
+          return resolve(results[1][0])
         }
       }
     )
   })
 }
 
-exports.RegisterUser = (data) => {
+exports.GetProfile = (id) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`SELECT u.id,u.username,p.fullname, p.email,p.balance,p.gender,p.address from userProfile p INNER JOIN users u ON p.idUser=u.id WHERE u.id=${id}`,
+      (error, results, fields) => {
+        if (error) {
+          return reject(new Error(error))
+        } else {
+          return resolve(results[1][0])
+        }
+      }
+    )
+  })
+}
+
+exports.CreateUser = (data, isAdmin) => {
   return new Promise((resolve, reject) => {
     const { username, password } = data
     runQuery(`SELECT COUNT(*) AS total FROM users WHERE username = '${username}'`,
       (err, results, fields) => {
         if (err) {
-          reject(new Error(err))
+          return reject(new Error(err))
         }
         const { total } = results[1][0]
         if (!total) {
-          runQuery(`INSERT INTO users(username,password) VALUES('${username}','${password}')`,
+          runQuery(`INSERT INTO users(username, password${isAdmin ? ',isAdmin' : ''})VALUES('${username}','${password}'${isAdmin ? ',1' : ''})`,
             (err, results, fields) => {
               if (err) {
-                reject(new Error(err))
                 console.log(results[1].solutions)
+                return reject(new Error(err))
               } else {
-                runQuery(`INSERT INTO usersProfile(id_user) VALUES(${results[1].insertId})`,
+                const codeVerify = uuid()
+                runQuery(`INSERT INTO userProfile(idUser, codeVerify ) VALUES(${results[1].insertId},'${codeVerify}')`,
                   (err, results, fields) => {
                     if (!err) {
-                      resolve(true)
+                      return resolve({ status: true, codeVerify })
                     }
                     console.log(err)
                   })
               }
             })
         } else {
-          reject(new Error('Username Already Exists'))
+          return reject(new Error('Username Already Exists'))
         }
       })
   })
@@ -49,63 +63,14 @@ exports.RegisterUser = (data) => {
 
 exports.VerifyUser = (code) => {
   return new Promise((resolve, reject) => {
-    runQuery(`SELECT id_user FROM usersProfile WHERE verify='${code}'`, (err, results, fields) => {
-      if (!err) {
-        if (results[1][0] && results[1][0].id_user) {
-          const idUser = results[1][0].id_user
-          runQuery(`UPDATE users SET status=1 WHERE id = ${idUser};
-          UPDATE usersProfile SET verify = ${null} WHERE id_user = ${idUser}`, (err, results, fields) => {
-            if (err) {
-              reject(new Error(err))
-            } else {
-              resolve(true)
-            }
-          })
-        } else {
-          return reject(new Error('Verification Failed, Code is Not Accepted !'))
-        }
-      } else {
-        return reject(new Error(err))
-      }
-    })
-  })
-}
-
-exports.VerifiedUser = (username) => {
-  return new Promise((resolve, reject) => {
-    runQuery(`SELECT id,username FROM users WHERE username='${username}'`, (err, results, fields) => {
-      if (err) {
-        return reject(new Error(err))
-      }
-      if (results[1].length > 0 && results[1][0]) {
-        const codeVerify = uuid()
-        const idUser = results[1][0].id
-        runQuery(`UPDATE usersProfile SET code_verify='${codeVerify}' WHERE id_user=${idUser}`, (err, results, fields) => {
-          if (err) {
-            return reject(new Error(err))
-          }
-          if (results[1].affectedRows) {
-            return resolve({ status: true, codeVerify })
-          } else {
-            return reject(new Error('Failed Request Code Verify'))
-          }
-        })
-      } else {
-        return reject(new Error('Username is Required'))
-      }
-    })
-  })
-}
-exports.ChangePassword = (code, password) => {
-  return new Promise((resolve, reject) => {
-    runQuery(`SELECT id_user from usersProfile WHERE code_verify= '${code}'`,
+    runQuery(`SELECT idUser from userProfile WHERE codeVerify= '${code}'`,
       (err, results, fields) => {
         if (!err) {
-          if (results[1][0] && results[1][0].id_user) {
-            const idUser = results[1][0].id_user
+          if (results[1][0] && results[1][0].idUser) {
+            const idUser = results[1][0].idUser
             runQuery(`
-              UPDATE users SET password='${password}' WHERE id = ${idUser};
-              UPDATE usersProfile SET code_verify = ${null} WHERE id_user =${idUser}
+              UPDATE users SET status=1 WHERE id = ${idUser};
+              UPDATE userProfile SET codeVerify = ${null} WHERE idUser =${idUser}
             `, (err, results, fields) => {
               if (err) {
                 reject(new Error(err))
@@ -122,37 +87,89 @@ exports.ChangePassword = (code, password) => {
       })
   })
 }
-exports.UpdateUser = (id, params) => {
+
+exports.GetCodeVerify = (username) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`SELECT id,username FROM users WHERE username = '${username}'`,
+      (err, results, fields) => {
+        if (err) {
+          return reject(new Error(err))
+        }
+        if (results[1].length > 0 && results[1][0]) {
+          const codeVerify = uuid()
+          const idUser = results[1][0].id
+          runQuery(`UPDATE userProfile SET codeVerify = '${codeVerify}' WHERE idUser=${idUser}`,
+            (err, results, fields) => {
+              if (err) {
+                return reject(new Error(err))
+              }
+              if (results[1].affectedRows) {
+                return resolve({ status: true, codeVerify })
+              } else {
+                return reject(new Error('Failed to Get Code Verify'))
+              }
+            })
+        } else {
+          return reject(new Error('Username Not Exists'))
+        }
+      })
+  })
+}
+
+exports.ChangePassword = (code, password) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`SELECT idUser from userProfile WHERE codeVerify= '${code}'`,
+      (err, results, fields) => {
+        if (!err) {
+          if (results[1][0] && results[1][0].idUser) {
+            const idUser = results[1][0].idUser
+            runQuery(`
+              UPDATE users SET password='${password}' WHERE id = ${idUser};
+              UPDATE userProfile SET codeVerify = ${null} WHERE idUser =${idUser}
+            `, (err, results, fields) => {
+              if (err) {
+                reject(new Error(err))
+              } else {
+                resolve(true)
+              }
+            })
+          } else {
+            return reject(new Error('Code Verification Wrong'))
+          }
+        } else {
+          return reject(new Error(err))
+        }
+      })
+  })
+}
+exports.UpdateProfile = (id, params) => {
   return new Promise((resolve, reject) => {
     const query = []
-    const paramsUsers = params.slice().filter(v => ['username', 'password'].includes(v.keys))
-    console.log(params)
-    console.log(paramsUsers)
-    const paramsProfile = params.slice().filter((v) => ['fullname', 'email', 'gender', 'address', 'picture'].includes(v.keys))
+    const paramsUsers = params.slice().filter(v => ['username', 'password', 'status'].includes(v.key))
+    const paramsProfile = params.slice().filter((v) => ['fullname', 'email', 'gender', 'balance', 'address', 'picture'].includes(v.key))
     if (paramsUsers.length > 0) {
-      query.push(`UPDATE users SET ${paramsUsers.map(v => `${v.keys} = '${v.value}'`).join(' , ')} WHERE id=${id}`)
+      query.push(`UPDATE users SET ${paramsUsers.map(v => `${v.key} = '${v.value}'`).join(' , ')} WHERE id=${id}`)
     }
     if (paramsProfile.length > 0) {
-      query.push(`UPDATE usersProfile SET ${paramsProfile.map(v => `${v.keys} = '${v.value}'`).join(' , ')} WHERE id_user=${id}`)
+      query.push(`UPDATE userProfile SET ${paramsProfile.map(v => `${v.key} = '${v.value}'`).join(' , ')} WHERE idUser=${id}`)
     }
-    console.log(query)
     runQuery(`${query.map((v) => v).join(';')}`, (err, results, fields) => {
       if (err) {
-        reject(new Error(err))
+        return reject(new Error(err))
       }
       console.log(results)
-      resolve(true)
+      return resolve(results[1].affectedRows)
     })
   })
 }
+
 exports.DeleteUser = (id) => {
   return new Promise((resolve, reject) => {
-    runQuery(`DELETE FROM users WHERE id=${id}`, (err, results, fields) => {
+    runQuery(`DELETE FROM users WHERE id = ${id}`, (err, results, fields) => {
       if (err) {
-        reject(new Error(err))
+        return reject(new Error(err))
       }
-      console.log({ results, fields })
-      resolve(true)
+      return resolve(results[1].affectedRows)
     })
   })
 }

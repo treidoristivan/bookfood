@@ -1,9 +1,9 @@
 const { runQuery } = require('../config/db')
 
-exports.GetItems = (id, params) => {
+exports.GetItem = (id, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
-      runQuery(`SELECT * FROM items WHERE id=${id}`, (err, results, fields) => {
+      runQuery(`SELECT * FROM items WHERE id =${id}`, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
@@ -35,7 +35,7 @@ exports.GetItems = (id, params) => {
   })
 }
 
-exports.CreateItems = (data) => {
+exports.CreateItem = (data) => {
   return new Promise((resolve, reject) => {
     runQuery(`INSERT INTO items(${data.columns.map(v => v).join(',')}) VALUES(${data.values.map(v => `'${v}'`).join(',')})
     `, (err, results, fields) => {
@@ -47,20 +47,21 @@ exports.CreateItems = (data) => {
     })
   })
 }
-exports.UpdateItems = (id, params) => {
+
+exports.UpdateItem = (id, params) => {
   return new Promise((resolve, reject) => {
-    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id=${id}`, (err, results, fields) => {
+    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id = ${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))
       }
       console.log(results[1])
-      return resolve(results[1].affcectedRows)
+      return resolve(results[1].affectedRows)
     })
   })
 }
 
-exports.DeleteItems = (id) => {
+exports.DeleteItem = (id) => {
   return new Promise((resolve, reject) => {
     runQuery(`DELETE FROM items WHERE id=${id}`, (err, results, fields) => {
       if (err) {
@@ -68,7 +69,7 @@ exports.DeleteItems = (id) => {
         return reject(new Error(err))
       }
       console.log(results[1])
-      return resolve(results[1].affcectedRows)
+      return resolve(results[1].affectedRows)
     })
   })
 }

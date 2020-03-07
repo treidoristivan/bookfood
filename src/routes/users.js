@@ -1,20 +1,13 @@
+const Users = require('express').Router()
+const checkAuthToken = require('../middleware/authMiddleware')
+const permission = require('../middleware/authPermissions')
+const { RegisterUser, LoginUser, UpdateUser, GetProfile, DeleteAccount, DeleteUser } = require('../controllers/users')
 
-const User = require('express').Router()
-const { GetAllUsers, GetDetailUsers, CreateUsers, UpdateUsers, DeleteUsers } = require('../controllers/users')
+Users.get('/profile', checkAuthToken, GetProfile)
+Users.post('/register', RegisterUser)
+Users.post('/login', LoginUser)
+Users.patch('/update', checkAuthToken, UpdateUser)
+Users.delete('/delete', checkAuthToken, DeleteAccount)
+Users.delete('/delete/:id', checkAuthToken, permission.superadmin, DeleteUser)
 
-// Menampilkan Data User
-User.get('/', GetAllUsers)
-
-// Menampilkan Data Detail User
-User.get('/:id', GetDetailUsers)
-
-// Membuat Data User
-User.post('/', CreateUsers)
-
-// Mengedit Data User
-User.patch('/:id', UpdateUsers)
-
-// Delete User
-User.delete('/', DeleteUsers)
-
-module.exports = { User }
+module.exports = Users

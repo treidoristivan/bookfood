@@ -1,13 +1,11 @@
 const items = require('express').Router()
-const { GetAllitems, GetDetailitems, Createitems, Updateitems, Deleteitems } = require('../controllers/items')
-const { checkAuthToken } = require('../middleware/AuthMiddleware')
-const { checkPermissions } = require('../middleware/AuthPermissions')
+const { GetAllItem, GetDetailItem, CreateItem, UpdateItem, DeleteItem } = require('../controllers/items')
+const checkAuthToken = require('../middleware/authMiddleware')
+const permission = require('../middleware/authPermissions')
 
-// Port items
-items.get('/get', GetAllitems)
-items.get('/get', GetDetailitems)
-items.post('/create', Createitems)
-items.patch('/update', checkAuthToken, checkPermissions, Updateitems)
-items.delete('/delete', checkAuthToken, checkPermissions, Deleteitems)
-
-module.exports = { items }
+items.get('/', GetAllItem)
+items.get('/:id', GetDetailItem)
+items.post('/', checkAuthToken, permission.admin, CreateItem)
+items.patch('/:id', checkAuthToken, permission.admin, UpdateItem)
+items.delete('/:id', checkAuthToken, permission.admin, DeleteItem)
+module.exports = items

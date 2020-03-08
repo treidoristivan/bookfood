@@ -1,5 +1,5 @@
 const qs = require('qs')
-const { GetRestaurants, CreateRestaurant, UpdateRestaurant, DeleteRestaurant } = require('../models/restaurant')
+const { GetRestaurant, CreateRestaurant, UpdateRestaurant, DeleteRestaurant } = require('../models/restaurant')
 const { GetUser } = require('../models/users')
 exports.GetAllRestaurant = async (req, res, next) => {
   try {
@@ -28,9 +28,9 @@ exports.GetAllRestaurant = async (req, res, next) => {
         }
       })
     }
-    const dataRestaurants = await GetRestaurants(false, params)
+    const dataRestaurant = await GetRestaurant(false, params)
 
-    const totalPages = Math.ceil(dataRestaurants.total / parseInt(params.perPage))
+    const totalPages = Math.ceil(dataRestaurant.total / parseInt(params.perPage))
     const query = req.query
     query.page = parseInt(params.currentPage) + 1
     const nextPage = (parseInt(params.currentPage) < totalPages ? process.env.APP_URL.concat(`${req.baseUrl}?${qs.stringify(query)}`) : null)
@@ -43,12 +43,12 @@ exports.GetAllRestaurant = async (req, res, next) => {
       previousPage,
       totalPages,
       perPage: params.perPage,
-      totalEntries: dataRestaurants.total
+      totalEntries: dataRestaurant.total
     }
-    if (dataRestaurants.results.length > 0) {
+    if (dataRestaurant.results.length > 0) {
       res.status(200).send({
         success: true,
-        data: dataRestaurants.results,
+        data: dataRestaurant.results,
         pagination
       })
     } else {
@@ -69,7 +69,7 @@ exports.GetAllRestaurant = async (req, res, next) => {
 
 exports.GetDetailRestaurant = async (req, res, next) => {
   try {
-    const dataRestaurant = await GetRestaurants(req.params.id)
+    const dataRestaurant = await GetRestaurant(req.params.id)
     res.status(200).send({
       success: true,
       data: dataRestaurant
@@ -114,10 +114,10 @@ exports.UpdateRestaurant = async (req, res, next) => {
       throw new Error('Please Defined What you want to update')
     }
     const { id } = req.params
-    const dataRestaurant = await GetRestaurants(id)
+    const dataRestaurant = await GetRestaurant(id)
     const dataOwner = await GetUser(req.auth.id)
     if (!dataRestaurant) {
-      throw new Error('Restaurants Not Exists')
+      throw new Error('Restaurant Not Exists')
     }
     if (!(dataOwner.id === dataRestaurant.idOwner || dataOwner.isSuperadmin)) {
       res.status(403).send({
@@ -161,7 +161,7 @@ exports.DeleteRestaurant = async (req, res, next) => {
     }
     res.status(200).send({
       success: true,
-      msg: `Success to Delete Restaurants With id ${id}`
+      msg: `Success to Delete Restaurant With id ${id}`
     })
   } catch (e) {
     console.log(e)

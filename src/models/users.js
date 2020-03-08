@@ -163,7 +163,7 @@ exports.UpdateProfile = (id, params) => {
   })
 }
 
-exports.DeleteUser = (id) => {
+exports.DeleteProfile = (id) => {
   return new Promise((resolve, reject) => {
     runQuery(`DELETE FROM users WHERE id = ${id}`, (err, results, fields) => {
       if (err) {

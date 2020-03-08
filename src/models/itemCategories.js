@@ -1,6 +1,6 @@
 const { runQuery } = require('../config/db')
 
-exports.GetCategory = (id, params) => {
+exports.GetCategories = (id, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
       runQuery(`SELECT * FROM itemCategories WHERE id =${id}`, (err, results, fields) => {
@@ -35,11 +35,11 @@ exports.GetCategory = (id, params) => {
   })
 }
 
-exports.CreateCategory = (name) => {
+exports.CreateCategories = (name) => {
   return new Promise((resolve, reject) => {
     runQuery(`SELECT COUNT(*) as total FROM itemCategories WHERE name='${name}'`, (err, results, fields) => {
       if (err || results[1][0].total) {
-        return reject(new Error(err || 'Category Already Exists'))
+        return reject(new Error(err || 'Categories Already Exists'))
       }
       runQuery(`INSERT INTO itemCategories(name) VALUES('${name}')`, (err, results, fields) => {
         if (err) {
@@ -52,11 +52,11 @@ exports.CreateCategory = (name) => {
   })
 }
 
-exports.UpdateCategory = (id, name) => {
+exports.UpdateCategories = (id, name) => {
   return new Promise((resolve, reject) => {
     runQuery(`SELECT COUNT(*) as total FROM itemCategories WHERE name='${name}'`, (err, results, fields) => {
       if (err || results[1][0].total) {
-        return reject(new Error(err || 'Category Already Exists'))
+        return reject(new Error(err || 'Categories Already Exists'))
       }
       runQuery(`UPDATE itemCategories SET name = '${name}' WHERE id = ${id}`, (err, results, fields) => {
         if (err) {
@@ -70,7 +70,7 @@ exports.UpdateCategory = (id, name) => {
   })
 }
 
-exports.DeleteCategory = (id) => {
+exports.DeleteCategories = (id) => {
   return new Promise((resolve, reject) => {
     runQuery(`DELETE FROM itemCategories WHERE id=${id}`, (err, results, fields) => {
       if (err) {

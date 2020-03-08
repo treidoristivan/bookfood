@@ -1,6 +1,6 @@
 const { runQuery } = require('../config/db')
 
-exports.GetRestaurants = (id, params) => {
+exports.GetRestaurant = (id, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
       runQuery(`SELECT * FROM restaurants WHERE id =${id}`, (err, results, fields) => {

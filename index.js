@@ -28,6 +28,7 @@ app.post('register', RegisterUser)
 app.get('/verify', Verify)
 app.post('/login', LoginUser)
 app.post('/forgot-password', ForgotPassword)
+app.post('/change-password', ForgotPassword)
 
 // G
 app.get('/profile', checkAuthToken, GetProfile)

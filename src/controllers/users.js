@@ -1,9 +1,75 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const qs = require('qs')
 const { runQuery } = require('../config/db')
-const { GetUser, CreateUser, VerifyUser, GetCodeVerify, ChangePassword, UpdateProfile, GetProfile, DeleteUser } = require('../models/users')
+const { GetUser, CreateUser, VerifyUser, GetCodeVerify, ChangePassword, UpdateProfile, GetProfile, DeleteProfile } = require('../models/users')
 const { validateUsernamePassword } = require('../utility/validate')
 require('dotenv').config()
+
+exports.GetAllUser = async (req, res, next) => {
+  try {
+    const params = {
+      currentPage: req.query.page || 1,
+      perPage: req.query.limit || 5,
+      search: req.query.search || '',
+      sort: req.query.sort || [{ key: 'id', value: 0 }]
+    }
+    const column = ['id', 'username', 'fullname', 'email', 'balance', 'gender', 'address']
+    if (req.query.search) {
+      params.search = Object.keys(params.search).map((v, i) => {
+        if (column.includes(v)) {
+          return { key: v, value: req.query.search[v] }
+        } else {
+          return [{ key: 'id', value: 0 }]
+        }
+      })
+    }
+    if (req.query.sort) {
+      params.sort = Object.keys(params.sort).map((v, i) => {
+        if (column.includes(v)) {
+          return { key: v, value: req.query.sort[v] }
+        } else {
+          return { key: 'id', value: 0 }
+        }
+      })
+    }
+    const dataUser = await GetProfile(false, params)
+    const totalPages = Math.ceil(dataUser.total / parseInt(params.perPage))
+    const query = req.query
+    query.page = parseInt(params.currentPage) + 1
+    const nextPage = (parseInt(params.currentPage) < totalPages ? process.env.APP_URL.concat(`${req.baseUrl}?${qs.stringify(query)}`) : null)
+    query.page = parseInt(params.currentPage) - 1
+    const previousPage = (parseInt(params.currentPage) > 1 ? process.env.APP_URL.concat(`${req.baseUrl}${qs.stringify(query)}`) : null)
+
+    const pagination = {
+      currentPage: params.currentPage,
+      nextPage,
+      previousPage,
+      totalPages,
+      perPage: params.perPage,
+      totalEntries: dataUser.total
+    }
+    if (dataUser.results.length > 0) {
+      res.status(200).send({
+        success: true,
+        data: dataUser.results,
+        pagination
+      })
+    } else {
+      res.status(200).send({
+        success: true,
+        data: false,
+        msg: 'Data is Empty'
+      })
+    }
+  } catch (e) {
+    console.log(e)
+    res.status(202).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}
 exports.GetProfile = async (req, res, next) => {
   try {
     const profileUser = await GetProfile(req.auth.id)
@@ -35,7 +101,7 @@ exports.RegisterUser = async (req, res, next) => {
             success: true,
             code_verify: statusRegister.codeVerify,
             msg: 'Register Success, Please Verify Your Account',
-            url_to_verify: `${process.env.APP_URL}/verify?code=${statusRegister.codeVerify}`
+            url_to_verify: `${process.env.APP_URL}verify?code=${statusRegister.codeVerify}`
           })
         }
       } else {
@@ -139,10 +205,10 @@ exports.UpdateUser = async (req, res, next) => {
   }
 }
 
-exports.DeleteAccount = async (req, res, next) => {
+exports.DeleteProfile = async (req, res, next) => {
   try {
     const { id } = req.auth
-    if (!(await DeleteUser(id))) {
+    if (!(await DeleteProfile(id))) {
       throw new Error('Failed to Delete Your Account')
     }
     res.status(200).send({
@@ -156,10 +222,10 @@ exports.DeleteAccount = async (req, res, next) => {
     })
   }
 }
-exports.DeleteUser = async (req, res, next) => {
+exports.DeleteProfile = async (req, res, next) => {
   try {
     const { id } = req.params.id
-    if (!(await DeleteUser(id))) {
+    if (!(await DeleteProfile(id))) {
       throw new Error('Failed to Delete User')
     }
     res.status(200).send({

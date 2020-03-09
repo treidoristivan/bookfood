@@ -23,7 +23,7 @@ Call App diirectory in Command Line ( CMD )
 Say what the step will be
 
 ```
-example : cd\Document\Belajar Arkademy\oribkfoood
+example : cd\Document\Belajar Arkademy\oribookfood
 ```
 
 And you can wait untill in your project, and next
@@ -45,7 +45,8 @@ End with an example of getting some data out of the system or using it for a lit
 
 ### Break down into end to end tests
 
-Explain what these tests test and why, in this moment Author testing with third-party requirement * [Postman] (https://www.postman.com/downloads/)
+Explain what these tests test and why, in this moment Author testing with third-party requirement 
+* [Postman](https://www.postman.com/downloads/)
 
 
 ## Built With

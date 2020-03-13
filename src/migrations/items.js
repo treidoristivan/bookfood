@@ -1,15 +1,15 @@
 const categoryT = `
   CREATE TABLE IF NOT EXISTS itemCategories(
-    id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    _id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name varchar(20) NOT NULL
   )
 `
 
 const itemsT = `
   CREATE TABLE IF NOT EXISTS items(
-  id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-  idRestaurant INT(11) UNSIGNED NOT NULL ,
-  idCategory INT(11) UNSIGNED DEFAULT 0,
+  _id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  id_restaurant INT(11) UNSIGNED NOT NULL ,
+  id_category INT(11) UNSIGNED DEFAULT 0,
   name VARCHAR(60) NOT NULL,
   price DECIMAL(10,2) UNSIGNED NOT NULL,
   quantity INT(11) UNSIGNED DEFAULT 0,
@@ -21,9 +21,9 @@ const itemsT = `
 `
 const itemReviewsT = `
   CREATE TABLE IF NOT EXISTS itemReviews(
-    id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    idUser INT(11) UNSIGNED DEFAULT 0 ,
-    idItem INT(11) UNSIGNED DEFAULT 0,
+    _id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    id_user INT(11) UNSIGNED DEFAULT 0 ,
+    id_item INT(11) UNSIGNED DEFAULT 0,
     rating TINYINT(1) UNSIGNED DEFAULT 0,
     review TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -33,19 +33,19 @@ const itemReviewsT = `
 const itemF = `
   ALTER TABLE items
   ADD CONSTRAINT FK_Restaurant
-    FOREIGN KEY (idRestaurant) REFERENCES restaurant(id)
+    FOREIGN KEY (id_restaurant) REFERENCES restaurants(_id)
     ON DELETE CASCADE,
   ADD CONSTRAINT FK_Category
-    FOREIGN KEY (idCategory) REFERENCES itemCategories(id)
+    FOREIGN KEY (id_category) REFERENCES itemCategories(_id)
     ON DELETE SET NULL
 `
 const itemReviewsF = `
   ALTER TABLE itemReviews
   ADD CONSTRAINT FK_User_Review
-    FOREIGN KEY (idUser) REFERENCES users(id)
+    FOREIGN KEY (id_user) REFERENCES users(_id)
     ON DELETE SET NULL,
   ADD CONSTRAINT FK_Item_Review
-    FOREIGN KEY (idItem) REFERENCES items(id)
+    FOREIGN KEY (id_item) REFERENCES items(_id)
     ON DELETE SET NULL
 `
 exports.queryTable = [

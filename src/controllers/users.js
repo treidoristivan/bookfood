@@ -2,25 +2,26 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const qs = require('qs')
 const { runQuery } = require('../config/db')
-const { GetUser, CreateUser, VerifyUser, GetCodeVerify, ChangePassword, UpdateProfile, GetProfile, DeleteProfile } = require('../models/users')
+const { GetUser, CreateUser, VerifyUser, GetCodeVerify, ChangePassword, UpdateProfile, GetProfile, DeleteUser } = require('../models/users')
 const { validateUsernamePassword } = require('../utility/validate')
+const uploads = require('../middleware/uploadFiles')
 require('dotenv').config()
 
-exports.GetAllUser = async (req, res, next) => {
+exports.GetAllUuser = async (req, res, next) => {
   try {
     const params = {
       currentPage: req.query.page || 1,
       perPage: req.query.limit || 5,
       search: req.query.search || '',
-      sort: req.query.sort || [{ key: 'id', value: 0 }]
+      sort: req.query.sort || [{ key: '_id', value: 0 }]
     }
-    const column = ['id', 'username', 'fullname', 'email', 'balance', 'gender', 'address']
+    const column = ['_id', 'username', 'fullname', 'email', 'balance', 'gender', 'address']
     if (req.query.search) {
       params.search = Object.keys(params.search).map((v, i) => {
         if (column.includes(v)) {
           return { key: v, value: req.query.search[v] }
         } else {
-          return [{ key: 'id', value: 0 }]
+          return [{ key: '_id', value: 0 }]
         }
       })
     }
@@ -29,11 +30,12 @@ exports.GetAllUser = async (req, res, next) => {
         if (column.includes(v)) {
           return { key: v, value: req.query.sort[v] }
         } else {
-          return { key: 'id', value: 0 }
+          return { key: '_id', value: 0 }
         }
       })
     }
     const dataUser = await GetProfile(false, params)
+
     const totalPages = Math.ceil(dataUser.total / parseInt(params.perPage))
     const query = req.query
     query.page = parseInt(params.currentPage) + 1
@@ -72,14 +74,18 @@ exports.GetAllUser = async (req, res, next) => {
 }
 exports.GetProfile = async (req, res, next) => {
   try {
-    const profileUser = await GetProfile(req.auth.id)
+    const profileUser = await GetProfile(req.params.id || req.auth.id)
     if (profileUser) {
       return res.status(200).send({
         success: true,
         data: profileUser
       })
     } else {
-      throw new Error('Your Account Has been deleted')
+      if (req.params.id) {
+        throw new Error('Account Not Exists')
+      } else {
+        throw new Error('Your Account Has been deleted')
+      }
     }
   } catch (e) {
     res.status(202).send({
@@ -101,7 +107,7 @@ exports.RegisterUser = async (req, res, next) => {
             success: true,
             code_verify: statusRegister.codeVerify,
             msg: 'Register Success, Please Verify Your Account',
-            url_to_verify: `${process.env.APP_URL}verify?code=${statusRegister.codeVerify}`
+            url_to_verify: `${process.env.APP_URL}/verify?code=${statusRegister.codeVerify}`
           })
         }
       } else {
@@ -124,13 +130,13 @@ exports.LoginUser = async (req, res, next) => {
     const { username, password } = req.body
     if (username && password) {
       const dataLogin = await new Promise((resolve, reject) => {
-        runQuery(`SELECT id,username,password,status FROM users WHERE username='${username}'`,
+        runQuery(`SELECT _id,username,password,status FROM users WHERE username='${username}'`,
           (err, results) => {
             if (!err && results[1].length > 0 && bcrypt.compareSync(password, results[1][0].password)) {
               if (!(results[1][0].status)) {
                 return reject(new Error('Please Verify Your Account'))
               }
-              const userData = { id: results[1][0].id, username }
+              const userData = { id: results[1][0]._id, username }
               return resolve(userData)
             } else {
               return reject(new Error(err || 'Username Or Password Wrong'))
@@ -159,6 +165,7 @@ exports.LoginUser = async (req, res, next) => {
 
 exports.UpdateUser = async (req, res, next) => {
   try {
+    await uploads(req, res, 'picture')
     const { id } = req.auth
     const fillable = ['username', 'fullname', 'email', 'gender', 'address', 'picture']
     const params = Object.keys(req.body).map((v) => {
@@ -168,7 +175,9 @@ exports.UpdateUser = async (req, res, next) => {
         return null
       }
     }).filter(o => o)
-
+    if (req.file) {
+      params.push({ key: 'picture', value: req.file.path })
+    }
     if (req.body.old_password) {
       const user = await GetUser(id)
       const oldPassword = user.password
@@ -205,10 +214,10 @@ exports.UpdateUser = async (req, res, next) => {
   }
 }
 
-exports.DeleteProfile = async (req, res, next) => {
+exports.DeleteAccount = async (req, res, next) => {
   try {
     const { id } = req.auth
-    if (!(await DeleteProfile(id))) {
+    if (!(await DeleteUser(id))) {
       throw new Error('Failed to Delete Your Account')
     }
     res.status(200).send({
@@ -222,10 +231,10 @@ exports.DeleteProfile = async (req, res, next) => {
     })
   }
 }
-exports.DeleteProfile = async (req, res, next) => {
+exports.DeleteUser = async (req, res, next) => {
   try {
     const { id } = req.params.id
-    if (!(await DeleteProfile(id))) {
+    if (!(await DeleteUser(id))) {
       throw new Error('Failed to Delete User')
     }
     res.status(200).send({
@@ -296,7 +305,7 @@ exports.ForgotPassword = async (req, res, next) => {
       const code = await GetCodeVerify(req.body.username)
       if (code.status) {
         res.status(200).send({
-          status: false,
+          status: true,
           msg: 'Request Success, You Can change your password',
           code_verify: code.codeVerify,
           url_to_change: `${process.env.APP_URL}/forgot-password?code=${code.codeVerify}`

@@ -1,9 +1,10 @@
 const qs = require('qs')
 const { GetItem, CreateItem, UpdateItem, DeleteItem } = require('../models/items')
-const { GetRestaurant } = require('../models/restaurant')
+const { GetIdCategory } = require('../models/itemCategories')
+const { GetRestaurants } = require('../models/restaurants')
 const { GetUser } = require('../models/users')
-const { GetCategories, GetIdCategories } = require('../models/itemCategories')
-
+const { GetCategory } = require('../models/itemCategories')
+const uploads = require('../middleware/uploadFiles')
 exports.GetAllItem = async (req, res, next) => {
   try {
     const params = {
@@ -12,13 +13,13 @@ exports.GetAllItem = async (req, res, next) => {
       search: req.query.search || '',
       sort: req.query.sort || [{ key: 'name', value: 0 }]
     }
-    const column = ['id', 'name', 'price', 'description']
+    const column = ['_id', 'name', 'price', 'description']
     if (req.query.search) {
       params.search = Object.keys(params.search).map((v, i) => {
         if (column.includes(v)) {
           return { key: v, value: req.query.search[v] }
         } else {
-          return [{ key: 'name', value: 0 }]
+          return ''
         }
       })
     }
@@ -30,11 +31,13 @@ exports.GetAllItem = async (req, res, next) => {
           return { key: 'name', value: 0 }
         }
       })
-    } if (req.query.search && req.query.search.category) {
-      const idcategory = await GetIdCategories(req.query.search.category)
-      params.idCategory = idcategory || [0]
+    }
+    if (req.query.search && req.query.search.category) {
+      const idcategory = await GetIdCategory(req.query.search.category)
+      params.id_category = idcategory || [0]
     }
     const dataItems = await GetItem(false, params)
+
     const totalPages = Math.ceil(dataItems.total / parseInt(params.perPage))
     const query = req.query
     query.page = parseInt(params.currentPage) + 1
@@ -75,20 +78,21 @@ exports.GetAllItem = async (req, res, next) => {
 exports.GetDetailItem = async (req, res, next) => {
   try {
     const dataitem = await GetItem(req.params.id)
-    const relateditem = await GetItem(false, {
-      idCategory: [dataitem.idCategory],
+    const relatedItem = await GetItem(false, {
+      id_category: [dataitem.id_category],
       search: '',
       currentPage: 1,
       perPage: 5,
-      sort: ({ key: 'name', value: 0 })
+      sort: [{ key: 'name', value: 0 }]
     })
     if (dataitem) {
       res.status(200).send({
         success: true,
         data: {
           ...dataitem,
-          relateditem: relateditem.results
+          relatedItem: relatedItem.results.filter(v => v._id !== dataitem._id)
         }
+
       })
     } else {
       res.status(200).send({
@@ -108,16 +112,17 @@ exports.GetDetailItem = async (req, res, next) => {
 
 exports.CreateItem = async (req, res, next) => {
   try {
-    if (!req.body.idRestaurant || !req.body.idCategory || !req.body.name || !req.body.price) {
-      throw new Error('idRestaurant, idCategory, name, and price is required')
+    await uploads(req, res, 'images')
+    if (!req.body.id_restaurant || !req.body.id_category || !req.body.name || !req.body.price) {
+      throw new Error('id_restaurant, id_category, name, and price is required')
     }
-    const dataRestaurant = await GetRestaurant(req.body.idRestaurant)
-    const dataCategory = await GetCategories(req.body.idCategory)
+    const dataRestaurant = await GetRestaurants(req.body.id_restaurant)
+    const dataCategory = await GetCategory(req.body.id_category)
     const dataUser = await GetUser(req.auth.id)
     if (!(dataRestaurant) || !(dataCategory)) {
-      throw new Error(!(dataRestaurant) ? `Restaurants With id ${req.body.idRestaurant} Not Exists` : `Category With id ${req.body.idCategory} Not Exists`)
+      throw new Error(!(dataRestaurant) ? `Restaurants With id ${req.body.id_restaurant} Not Exists` : `Category With id ${req.body.id_category} Not Exists`)
     }
-    if (!(dataUser.id === dataRestaurant.idOwner || dataUser.isSuperadmin)) {
+    if (!(dataUser._id === dataRestaurant.id_owner || dataUser.is_superadmin)) {
       return res.status(403).send({
         success: false,
         msg: 'To add Item to this Restaurant You Must Owner of Restaurant Or Superadmin'
@@ -125,13 +130,17 @@ exports.CreateItem = async (req, res, next) => {
     }
     const columns = []
     const values = []
-    const fillAble = ['idRestaurant', 'idCategory', 'name', 'price', 'images', 'decription']
-    Object.keys(req.body).forEach((v) => {
-      if (v && fillAble.includes(v) && req.body[v]) {
+    const fillAble = ['id_restaurant', 'id_category', 'name', 'price', 'images', 'decription']
+    fillAble.forEach((v) => {
+      if (v && req.body[v]) {
         columns.push(v)
         values.push(req.body[v])
       }
     })
+    if (req.file) {
+      columns.push('images')
+      values.push(req.file.path)
+    }
     const item = await CreateItem({ columns, values })
     if (item) {
       res.status(201).send({
@@ -154,30 +163,34 @@ exports.CreateItem = async (req, res, next) => {
 
 exports.UpdateItem = async (req, res, next) => {
   try {
+    await uploads(req, res, 'images')
     if (!(Object.keys(req.body).length > 0)) {
       throw new Error('Please Defined What you want to update')
     }
     const { id } = req.params
     const dataItem = await GetItem(id)
-    const dataRestaurant = await GetRestaurant(dataItem.idRestaurant)
+    const dataRestaurant = await GetRestaurants(dataItem.id_restaurant)
     const dataUser = await GetUser(req.auth.id)
     if (!(dataItem)) {
-      throw new Error(`Item With id ${req.body.idCategory} Not Exists`)
+      throw new Error(`Item With id ${req.body.id_category} Not Exists`)
     }
-    if (!(dataUser.isSuperadmin || dataUser.id === dataRestaurant.idOwner)) {
+    if (!(dataUser.is_superadmin || dataUser._id === dataRestaurant.id_owner)) {
       return res.status(403).send({
         success: false,
         msg: 'To Update Item You Must Owner of Restaurant Or Superadmin'
       })
     }
-    const fillAble = ['idCategory', 'name', 'quantity', 'price', 'images', 'decription']
-    const params = Object.keys(req.body).map((v) => {
-      if (v && fillAble.includes(v) && req.body[v]) {
+    const fillAble = ['id_category', 'name', 'quantity', 'price', 'images', 'decription']
+    const params = fillAble.map((v) => {
+      if (v && req.body[v]) {
         return { key: v, value: req.body[v] }
       } else {
         return null
       }
     }).filter(v => v)
+    if (req.file) {
+      params.push({ key: 'images', value: req.file.path })
+    }
     if (params.length > 0) {
       const update = await UpdateItem(id, params)
       if (update) {
@@ -206,10 +219,10 @@ exports.DeleteItem = async (req, res, next) => {
     if (!(dataItem)) {
       throw new Error(`Item With id ${id} Not Exists`)
     }
-    const dataRestaurant = await GetRestaurant(dataItem.idRestaurant)
+    const dataRestaurant = await GetRestaurants(dataItem.id_restaurant)
     const dataUser = await GetUser(req.auth.id)
 
-    if (!(dataUser.isSuperadmin || dataUser.id === dataRestaurant.idOwner)) {
+    if (!(dataUser.is_superadmin || dataUser._id === dataRestaurant.id_owner)) {
       return res.status(403).send({
         success: false,
         msg: 'To Delete Item You Must Owner of Restaurant Or Superadmin'

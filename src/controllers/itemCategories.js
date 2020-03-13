@@ -1,21 +1,22 @@
 const qs = require('qs')
-const { GetCategories, CreateCategories, UpdateCategories, DeleteCategories } = require('../models/itemCategories')
+const { GetCategory, CreateCategory, UpdateCategory, DeleteCategory } = require('../models/itemCategories')
+const { GetItem } = require('../models/items')
 
-exports.GetAllCategories = async (req, res, next) => {
+exports.GetAllCategory = async (req, res, next) => {
   try {
     const params = {
       currentPage: req.query.page || 1,
       perPage: req.query.limit || 5,
-      search: req.query.search || '',
+      search: req.query.search || [{ key: 'name', value: '' }],
       sort: req.query.sort || [{ key: 'name', value: 0 }]
     }
-    const column = ['id', 'name']
+    const column = ['_id', 'name']
     if (req.query.search) {
       params.search = Object.keys(params.search).map((v, i) => {
         if (column.includes(v)) {
           return { key: v, value: req.query.search[v] }
         } else {
-          return [{ key: 'name', value: 0 }]
+          return [{ key: 'name', value: '' }]
         }
       })
     }
@@ -28,9 +29,9 @@ exports.GetAllCategories = async (req, res, next) => {
         }
       })
     }
-    const dataCategories = await GetCategories(false, params)
+    const dataCategory = await GetCategory(false, params)
 
-    const totalPages = Math.ceil(dataCategories.total / parseInt(params.perPage))
+    const totalPages = Math.ceil(dataCategory.total / parseInt(params.perPage))
     const query = req.query
     query.page = parseInt(params.currentPage) + 1
     const nextPage = (parseInt(params.currentPage) < totalPages ? process.env.APP_URL.concat(`${req.baseUrl}?${qs.stringify(query)}`) : null)
@@ -43,12 +44,12 @@ exports.GetAllCategories = async (req, res, next) => {
       previousPage,
       totalPages,
       perPage: params.perPage,
-      totalEntries: dataCategories.total
+      totalEntries: dataCategory.total
     }
-    if (dataCategories.results.length > 0) {
+    if (dataCategory.results.length > 0) {
       res.status(200).send({
         success: true,
-        data: dataCategories.results,
+        data: dataCategory.results,
         pagination
       })
     } else {
@@ -67,19 +68,71 @@ exports.GetAllCategories = async (req, res, next) => {
   }
 }
 
-exports.GetDetailCategories = async (req, res, next) => {
+exports.GetDetailCategory = async (req, res, next) => {
   try {
-    const dataCategories = await GetCategories(req.params.id)
-    if (dataCategories) {
-      res.status(200).send({
-        success: true,
-        data: dataCategories
-      })
+    const dataCategory = await GetCategory(req.params.id)
+    if (dataCategory) {
+      const params = {
+        currentPage: req.query.page || 1,
+        perPage: req.query.limit || 5,
+        search: req.query.search || [{ key: 'name', value: '' }],
+        sort: req.query.sort || [{ key: 'name', value: 0 }],
+        id_category: [req.params.id]
+      }
+      const column = ['_id', 'name', 'price', 'description']
+      if (req.query.search) {
+        params.search = Object.keys(params.search).map((v, i) => {
+          if (column.includes(v)) {
+            return { key: v, value: req.query.search[v] }
+          } else {
+            return [{ key: 'name', value: '' }]
+          }
+        })
+      }
+      if (req.query.sort) {
+        params.sort = Object.keys(params.sort).map((v, i) => {
+          if (column.includes(v)) {
+            return { key: v, value: req.query.sort[v] }
+          } else {
+            return { key: 'name', value: 0 }
+          }
+        })
+      }
+      const dataItems = await GetItem(false, params)
+      const totalPages = Math.ceil(dataItems.total / parseInt(params.perPage))
+      const query = req.query
+      query.page = parseInt(params.currentPage) + 1
+      const nextPage = (parseInt(params.currentPage) < totalPages ? process.env.APP_URL.concat(`${req.originalUrl.substring(0, req.originalUrl.indexOf('?'))}?${qs.stringify(query)}`) : null)
+      query.page = parseInt(params.currentPage) - 1
+      const previousPage = (parseInt(params.currentPage) > 1 ? process.env.APP_URL.concat(`${req.originalUrl.substring(0, req.originalUrl.indexOf('?'))}${qs.stringify(query)}`) : null)
+      const pagination = {
+        currentPage: params.currentPage,
+        nextPage,
+        previousPage,
+        totalPages,
+        perPage: params.perPage,
+        totalEntries: dataItems.total
+      }
+      if (dataItems.results.length > 0) {
+        res.status(200).send({
+          success: true,
+          ...dataCategory,
+          dataItems: dataItems.results,
+          pagination
+        })
+      } else {
+        res.status(200).send({
+          success: true,
+          ...dataCategory,
+          dataItems: false,
+          msg: 'Items with this category is Empty'
+        })
+      }
     } else {
       res.status(200).send({
         success: true,
         data: false,
-        msg: `Categories With id ${req.params.id} Not Exists`
+        msg: `Category With id ${req.params.id} Not Exists`
       })
     }
   } catch (e) {
@@ -91,19 +144,19 @@ exports.GetDetailCategories = async (req, res, next) => {
   }
 }
 
-exports.CreateCategories = async (req, res, next) => {
+exports.CreateCategory = async (req, res, next) => {
   try {
     if (!req.body.name) {
       throw new Error('name is required')
     }
-    const categories = await CreateCategories(req.body.name)
-    if (categories) {
+    const category = await CreateCategory(req.body.name)
+    if (category) {
       res.status(201).send({
         success: true,
-        msg: 'Success Create Categories',
+        msg: 'Success Create Category',
         data: {
           name: req.body.name,
-          id: categories
+          id: category
         }
       })
     } else {
@@ -118,17 +171,17 @@ exports.CreateCategories = async (req, res, next) => {
   }
 }
 
-exports.UpdateCategories = async (req, res, next) => {
+exports.UpdateCategory = async (req, res, next) => {
   try {
     if (!(req.body.name)) {
       throw new Error('name is required')
     }
     const { id } = req.params
-    const update = await UpdateCategories(id, req.body.name)
+    const update = await UpdateCategory(id, req.body.name)
     if (update) {
       res.status(201).send({
         success: true,
-        msg: `Success Update Categories With id ${id}`
+        msg: `Success Update Category With id ${id}`
       })
     }
   } catch (e) {
@@ -139,15 +192,15 @@ exports.UpdateCategories = async (req, res, next) => {
   }
 }
 
-exports.DeleteCategories = async (req, res, next) => {
+exports.DeleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params
-    if (!(await DeleteCategories(id))) {
-      throw new Error(`Failed To Delete Categories With id ${id}`)
+    if (!(await DeleteCategory(id))) {
+      throw new Error(`Failed To Delete Category With id ${id}`)
     }
     res.status(200).send({
       success: true,
-      msg: `Success to Delete Categories With id ${id}`
+      msg: `Success to Delete Category With id ${id}`
     })
   } catch (e) {
     console.log(e)

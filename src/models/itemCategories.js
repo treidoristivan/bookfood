@@ -1,9 +1,9 @@
 const { runQuery } = require('../config/db')
 
-exports.GetCategories = (id, params) => {
+exports.GetCategory = (id, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
-      runQuery(`SELECT * FROM itemCategories WHERE id =${id}`, (err, results, fields) => {
+      runQuery(`SELECT * FROM itemCategories WHERE _id =${id}`, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
@@ -34,12 +34,29 @@ exports.GetCategories = (id, params) => {
     }
   })
 }
-
-exports.CreateCategories = (name) => {
+exports.GetIdCategory = (nameCategory) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`
+        SELECT _id from itemCategories WHERE name LIKE '%${nameCategory}%'
+      `, (err, results, fields) => {
+      if (err) {
+        console.log(err)
+        return reject(new Error(err))
+      }
+      if (results[1][0]) {
+        const idCategory = results[1].map(v => v._id)
+        return resolve(idCategory)
+      } else {
+        return resolve(false)
+      }
+    })
+  })
+}
+exports.CreateCategory = (name) => {
   return new Promise((resolve, reject) => {
     runQuery(`SELECT COUNT(*) as total FROM itemCategories WHERE name='${name}'`, (err, results, fields) => {
       if (err || results[1][0].total) {
-        return reject(new Error(err || 'Categories Already Exists'))
+        return reject(new Error(err || 'Category Already Exists'))
       }
       runQuery(`INSERT INTO itemCategories(name) VALUES('${name}')`, (err, results, fields) => {
         if (err) {
@@ -52,13 +69,13 @@ exports.CreateCategories = (name) => {
   })
 }
 
-exports.UpdateCategories = (id, name) => {
+exports.UpdateCategory = (id, name) => {
   return new Promise((resolve, reject) => {
     runQuery(`SELECT COUNT(*) as total FROM itemCategories WHERE name='${name}'`, (err, results, fields) => {
       if (err || results[1][0].total) {
-        return reject(new Error(err || 'Categories Already Exists'))
+        return reject(new Error(err || 'Category Already Exists'))
       }
-      runQuery(`UPDATE itemCategories SET name = '${name}' WHERE id = ${id}`, (err, results, fields) => {
+      runQuery(`UPDATE itemCategories SET name = '${name}' WHERE _id = ${id}`, (err, results, fields) => {
         if (err) {
           console.log(err)
           return reject(new Error(err))
@@ -70,9 +87,9 @@ exports.UpdateCategories = (id, name) => {
   })
 }
 
-exports.DeleteCategories = (id) => {
+exports.DeleteCategory = (id) => {
   return new Promise((resolve, reject) => {
-    runQuery(`DELETE FROM itemCategories WHERE id=${id}`, (err, results, fields) => {
+    runQuery(`DELETE FROM itemCategories WHERE _id=${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))

@@ -1,0 +1,180 @@
+/reviews:
+  get:
+    tags:
+      - Reviews Item
+    summary: Browse All Added User Reviews
+    description: Use Browse All Reviews User currently logged in
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: limit
+        in : query
+        type: integer
+        description: Numbers of Data PerPage
+      - name: page
+        in : query
+        type: integer
+        description: Page Number
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  post:
+    tags:
+      - Reviews Item
+    summary: Create User Reviews
+    description: Use to Create Riviews to item
+    security:
+      - bearerAuth: []
+    requestBody:
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              id_item:
+                type: integer
+              rating:
+                type: integer
+                enum: [1, 2, 3, 4, 5]
+              review:
+                type: string
+    responses:
+      201:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+
+/reviews/items/{id}:
+  get:
+    tags:
+      - Reviews Item
+    summary: Get All Reviews For Specific Item
+    description: Use to Get Reviews For Specific Item
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Reviews
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+/reviews/{id}:
+  get:
+    tags:
+      - Reviews Item
+    summary: Get Specific Reviews
+    description: Use to Get Specific Reviews
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Reviews
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  patch:
+    tags:
+      - Reviews Item
+    summary: Update User Review
+    description: Minimal Defined one parameter to Update Your Review
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Reviews
+    requestBody:
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              rating:
+                type: integer
+                enum: [1, 2, 3, 4, 5]
+              review:
+                type: string
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  delete:
+    tags:
+      - Reviews Item
+    summary: Delete User Review
+    description: Use To Delete Review User currently logged in
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Reviews
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+
+              
+  

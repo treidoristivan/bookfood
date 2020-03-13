@@ -1,0 +1,173 @@
+/items:
+  get:
+    tags:
+      - Admin Items
+    summary: Browse All Items
+    description: Use Browse All Items
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: limit
+        in : query
+        type: integer
+        description: Numbers of Data PerPage
+      - name: page
+        in : query
+        type: integer
+        description: Page Number
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  post:
+    tags:
+      - Admin Items
+    summary: Create Items For Restaurants
+    description: Use to Create items
+    security:
+      - bearerAuth: []
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - id_restaurant
+              - id_category
+              - name
+              - quantity
+            properties:
+              id_restaurant:
+                type: integer
+              id_category:
+                type: integer
+              name:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: string
+              description:
+                type: string
+              images:
+                type: string
+                format: binary
+    responses:
+      201:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+
+/items/{id}:
+  get:
+    tags:
+      - Admin Items
+    summary: Get Specific items
+    description: Use to Get Specific Reviews
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id items
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  patch:
+    tags:
+      - Admin Items
+    summary: Update items
+    description: Minimal Defined one parameter to Update Your Review
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Items
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: string
+              description:
+                type: string
+              images:
+                type: string
+                format: binary
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  delete:
+    tags:
+      - Admin Items
+    summary: Delete Items
+    description: Delete Items from Restaurant
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Items
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+
+              
+  

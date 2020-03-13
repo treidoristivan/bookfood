@@ -1,0 +1,26 @@
+/users/{id}:
+  delete:
+    tags:
+      - User
+    summary: Delete User
+    description: Delete User With Spesifi Id
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id User
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error

@@ -3,7 +3,7 @@ const { runQuery } = require('../config/db')
 exports.GetItem = (id, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
-      runQuery(`SELECT * FROM items WHERE id =${id}`, (err, results, fields) => {
+      runQuery(`SELECT * FROM items WHERE _id =${id}`, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
@@ -12,9 +12,8 @@ exports.GetItem = (id, params) => {
     } else {
       const { perPage, currentPage, search, sort } = params
       const condition = `
-          ${params.idCategory ? `WHERE idCategory IN (${params.idCategory.join(',')})` : ''}
-          ${search && search[0] && `${params.idCategory ? 'AND' : 'WHERE'} 
-          ${search.map(v => `${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
+          ${params.id_category ? `WHERE id_category IN (${params.id_category.join(',')})` : ''}
+          ${search && search[0] && `${params.id_category ? 'AND' : 'WHERE'} ${search.map(v => `${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
           ORDER BY ${sort.map(v => `${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
           ${(parseInt(currentPage) && parseInt(perPage)) ? `LIMIT ${parseInt(perPage)} 
           OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}
@@ -52,7 +51,7 @@ exports.CreateItem = (data) => {
 
 exports.UpdateItem = (id, params) => {
   return new Promise((resolve, reject) => {
-    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE id = ${id}`, (err, results, fields) => {
+    runQuery(`UPDATE items SET ${params.map(v => `${v.key} = '${v.value}'`).join(',')} WHERE _id = ${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))
@@ -65,7 +64,7 @@ exports.UpdateItem = (id, params) => {
 
 exports.DeleteItem = (id) => {
   return new Promise((resolve, reject) => {
-    runQuery(`DELETE FROM items WHERE id=${id}`, (err, results, fields) => {
+    runQuery(`DELETE FROM items WHERE _id=${id}`, (err, results, fields) => {
       if (err) {
         console.log(err)
         return reject(new Error(err))

@@ -1,0 +1,165 @@
+/restaurants:
+  get:
+    tags:
+      - Restaurants
+    summary: Browse All Restaurants
+    description: Use Browse All Restaurants
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: limit
+        in : query
+        type: integer
+        description: Numbers of Data PerPage
+      - name: page
+        in : query
+        type: integer
+        description: Page Number
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  post:
+    tags:
+      - Restaurants
+    summary: Create Items For Restaurants
+    description: Use to Create Restaurants
+    security:
+      - bearerAuth: []
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - id_owner
+              - name
+            properties:
+              id_owner:
+                type: integer
+              name:
+                type: string
+              logo:
+                type: string
+                format: binary
+              address:
+                type: string
+              description:
+                type: string
+    responses:
+      201:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+
+/restaurants/{id}:
+  get:
+    tags:
+      - Restaurants
+    summary: Get Specific Restaurants
+    description: Use to Get Specific Restaurants
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Restaurants
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  patch:
+    tags:
+      - Restaurants
+    summary: Update Restaurants
+    description: Minimal Defined one parameter to Update Your Restaurants
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Restaurants
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              logo:
+                type: string
+                format: binary
+              address:
+                type: string
+              description:
+                type: string
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted  but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+  delete:
+    tags:
+      - Restaurants
+    summary: Delete Restaurants
+    description: Delete Restaurants
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in : path
+        type: integer
+        description: Specific id Restaurants
+    responses:
+      200:
+        description: Success
+      202:
+        description: Request Accepted but the processing has not been completed
+      400:
+        description: Error
+      401:
+        description: Not Authorized, Please Login
+      403:
+        description: Not Allow, Forbiden
+      500:
+        description: Internal Server Error
+
+              
+  

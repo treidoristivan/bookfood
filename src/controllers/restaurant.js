@@ -29,7 +29,6 @@ exports.GetAllRestaurant = async (req, res, next) => {
       })
     }
     const dataRestaurant = await GetRestaurant(false, params)
-
     const totalPages = Math.ceil(dataRestaurant.total / parseInt(params.perPage))
     const query = req.query
     query.page = parseInt(params.currentPage) + 1

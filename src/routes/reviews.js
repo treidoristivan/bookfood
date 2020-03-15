@@ -8,4 +8,5 @@ Reviews.get('/:id', checkAuthToken, GetDetailReview)
 Reviews.get('/items/:id', checkAuthToken, GetAllReviewItem)
 Reviews.patch('/:id', checkAuthToken, UpdateReview)
 Reviews.delete('/:id', checkAuthToken, DeleteReview)
+
 module.exports = Reviews

@@ -43,15 +43,15 @@ exports.GetReviewItem = (idItem, params) => {
   return new Promise((resolve, reject) => {
     const { perPage, currentPage, search, sort } = params
     const condition = `
-        ${idItem ? `WHERE id_item = ${idItem}` : ''}
-        ${search && `${idItem ? 'AND' : 'WHERE'} ${search.map(v => `${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
-        ORDER BY ${sort.map(v => `${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
+        ${idItem ? `WHERE IR.id_item = ${idItem}` : ''}
+        ${search && `${idItem ? 'AND' : 'WHERE'} ${search.map(v => `IR.${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
+        ORDER BY ${sort.map(v => `IR.${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
         ${(parseInt(currentPage) && parseInt(perPage)) ? `LIMIT ${parseInt(perPage)} 
         OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}
         `
     runQuery(`
-      SELECT COUNT(*) AS total from itemReviews ${condition.substring(0, condition.indexOf('LIMIT'))};
-      SELECT * from itemReviews ${condition}
+      SELECT COUNT(*) AS total from itemReviews IR ${condition.substring(0, condition.indexOf('LIMIT'))};
+      SELECT IR._id, IR.id_item,U.username,UP.picture, IR.review, IR.review, IR.rating,IR.created_at from itemReviews IR INNER JOIN users U ON IR.id_user= U._id INNER JOIN userProfile UP ON IR.id_user=UP.id_User ${condition}
     `, (err, results, fields) => {
       if (err) {
         return reject(new Error(err))
@@ -68,7 +68,7 @@ exports.GetReviewItem = (idItem, params) => {
 }
 exports.CreateReview = (idUser, params) => {
   return new Promise((resolve, reject) => {
-    runQuery(`SELECT COUNT(*) as total FROM itemReviews WHERE id_user='${idUser} AND id_item=${params.id_item}'`, (err, results, fields) => {
+    runQuery(`SELECT COUNT(*) as total FROM itemReviews WHERE id_user=${idUser} AND id_item=${params.id_item}`, (err, results, fields) => {
       if (err || results[1][0].total) {
         return reject(new Error(err || 'Already Review this item You Can Update or Delete this review'))
       }

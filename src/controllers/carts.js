@@ -49,10 +49,17 @@ exports.AddItem = async (req, res, next) => {
     }
     const addedItem = await AddItem(idUser, dataItem)
     if (addedItem) {
-      return res.status(201).send({
-        success: true,
-        msg: 'Success Added Item to Cart'
-      })
+      if (addedItem === 'update') {
+        return res.status(201).send({
+          success: true,
+          msg: 'Item Already In Cart, Update Success'
+        })
+      } else {
+        return res.status(201).send({
+          success: true,
+          msg: 'Success Added Item to Cart'
+        })
+      }
     }
     throw new Error('Failed to Added Item')
   } catch (e) {

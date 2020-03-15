@@ -27,6 +27,8 @@ const userProfileT = `
 `
 const userProfileF = `
   ALTER TABLE userProfile
+  DROP CONSTRAINT IF EXISTS FK_User;
+  ALTER TABLE userProfile
   ADD CONSTRAINT FK_User
     FOREIGN KEY (id_user) REFERENCES users(_id)
     ON DELETE CASCADE

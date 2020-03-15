@@ -27,13 +27,13 @@
   get:
     tags:
       - Categories
-    summary: Get Specif restaurant
-    description: Use to Get restaurants In App
+    summary: Get data Item with this category
+    description: Use Get data Item with this categorys
     parameters:
       - name: id
         in : path
         type: integer
-        description: Specific id restaurants
+        description: Specific id Categories
       - name: limit
         in : query
         type: integer

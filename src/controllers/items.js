@@ -130,7 +130,7 @@ exports.CreateItem = async (req, res, next) => {
     }
     const columns = []
     const values = []
-    const fillAble = ['id_restaurant', 'id_category', 'name', 'price', 'images', 'decription']
+    const fillAble = ['id_restaurant', 'id_category', 'name', 'quantity', 'price', 'images', 'decription']
     fillAble.forEach((v) => {
       if (v && req.body[v]) {
         columns.push(v)

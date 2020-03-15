@@ -8,4 +8,5 @@ items.get('/:id', checkAuthToken, GetDetailItem)
 items.post('/', checkAuthToken, permission.admin, CreateItem)
 items.patch('/:id', checkAuthToken, permission.admin, UpdateItem)
 items.delete('/:id', checkAuthToken, permission.admin, DeleteItem)
+
 module.exports = items

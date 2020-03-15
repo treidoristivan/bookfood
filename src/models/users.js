@@ -1,6 +1,6 @@
 const { runQuery } = require('../config/db')
 const uuid = require('uuid').v1
-
+const sendEmail = require('../utility/sendEmail')
 exports.GetUser = (id) => {
   return new Promise((resolve, reject) => {
     runQuery(`SELECT * from users WHERE _id=${id}`,
@@ -54,7 +54,7 @@ exports.GetProfile = (id, params) => {
 
 exports.CreateUser = (data, isAdmin) => {
   return new Promise((resolve, reject) => {
-    const { username, password } = data
+    const { username, password, email } = data
     runQuery(`SELECT COUNT(*) AS total FROM users WHERE username = '${username}'`,
       (err, results, fields) => {
         if (err) {
@@ -69,10 +69,14 @@ exports.CreateUser = (data, isAdmin) => {
                 return reject(new Error(err))
               } else {
                 const codeVerify = uuid()
-                runQuery(`INSERT INTO userProfile(id_user, code_verify ) VALUES(${results[1].insertId},'${codeVerify}')`,
+                runQuery(`INSERT INTO userProfile(email,id_user, code_verify ) VALUES('${email}',${results[1].insertId},'${codeVerify}')`,
                   (err, results, fields) => {
                     if (!err) {
-                      return resolve({ status: true, codeVerify })
+                      sendEmail(email, codeVerify).then((status) => {
+                        return resolve(true)
+                      }).catch((e) => {
+                        reject(e)
+                      })
                     }
                     console.log(err)
                   })

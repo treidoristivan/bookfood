@@ -2,9 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const path = require('path')
 const app = express()
-const cors = require('cors')
 require('dotenv').config()
-
 /* Import Controllers */
 const { TopUp, Verify, ForgotPassword } = require('./src/controllers/users')
 const { CheckOutItem } = require('./src/controllers/carts')
@@ -19,32 +17,31 @@ const Reviews = require('./src/routes/reviews')
 const { GuestCategories, GuestItems, GuestRestaurants } = require('./src/routes/guests')
 
 /* Middleware */
-app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 /* Import Middleware */
 const checkAuthToken = require('./src/middleware/authMiddleware')
 
-// /* CSRF settings */
-// app.use((req, res, next) => {
-//   res.header('Access-Control-Allow-Origin', '*')
-//   res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, X-Requested-With, Accept, Authorization')
-//   if (req.method === 'OPTIONS') {
-//     res.header('Acces-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE')
-//     return res.status(200).send({})
-//   }
-//   next()
-// })
+/* CSRF settings */
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, X-Requested-With, Accept, Authorization')
+  if (req.method === 'OPTIONS') {
+    res.header('Acces-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE')
+    return res.status(200).send({})
+  }
+  next()
+})
 
 /* Set ROUTES */
 
 /* Redirect To api Docs */
-// app.get('/', (req, res, next) => {
-//   res.redirect('/api-docs')
-// })
-// /* API DOCS */
-// app.use('/api-docs', require('./src/docs/'))
+app.get('/', (req, res, next) => {
+  res.redirect('/api-docs')
+})
+/* API DOCS */
+app.use('/api-docs', require('./src/docs/'))
 
 app.post('/register', RegisterUser)
 app.get('/verify', Verify)
@@ -71,8 +68,7 @@ app.use('/browse-restaurants', GuestRestaurants)
 app.use('/browse-categories', GuestCategories)
 
 /* Server Listen */
-
 const PORT = process.env.PORT
 app.listen(PORT, () => {
-  console.log(' > > > Connected < < < ')
+  console.log('Server Listen on Port ' + PORT)
 })

@@ -6,4 +6,5 @@ Carts.get('/', checkAuthToken, GetAllCart)
 Carts.post('/', checkAuthToken, AddItem)
 Carts.patch('/:id', checkAuthToken, UpdateItemCart)
 Carts.delete('/:id', checkAuthToken, RemoveItemCart)
+
 module.exports = Carts

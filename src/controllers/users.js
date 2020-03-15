@@ -96,25 +96,23 @@ exports.GetProfile = async (req, res, next) => {
 }
 exports.RegisterUser = async (req, res, next) => {
   try {
-    const { username, password } = req.body
+    const { username, password, email } = req.body
     if (username && password) {
       const validate = validateUsernamePassword(username, password)
       if (validate.val) {
         const hashPassword = bcrypt.hashSync(password)
-        const statusRegister = await CreateUser({ username, password: hashPassword }, false)
-        if (statusRegister && statusRegister.status) {
+        const statusRegister = await CreateUser({ username, password: hashPassword, email }, false)
+        if (statusRegister) {
           res.status(201).send({
             success: true,
-            code_verify: statusRegister.codeVerify,
-            msg: 'Register Success, Please Verify Your Account',
-            url_to_verify: `${process.env.APP_URL}/verify?code=${statusRegister.codeVerify}`
+            msg: `Register Success, Please check ${email} to Verify Your Account`
           })
         }
       } else {
         throw new Error(validate.message)
       }
     } else {
-      throw new Error('Username and Password is Required')
+      throw new Error('Username, Password, and email is Required')
     }
   } catch (e) {
     console.log(e)
@@ -127,16 +125,25 @@ exports.RegisterUser = async (req, res, next) => {
 
 exports.LoginUser = async (req, res, next) => {
   try {
+    console.log(req.body)
     const { username, password } = req.body
     if (username && password) {
       const dataLogin = await new Promise((resolve, reject) => {
-        runQuery(`SELECT _id,username,password,status FROM users WHERE username='${username}'`,
+        runQuery(`SELECT _id,username,is_admin,is_superadmin,password,status FROM users WHERE username='${username}'`,
           (err, results) => {
             if (!err && results[1].length > 0 && bcrypt.compareSync(password, results[1][0].password)) {
               if (!(results[1][0].status)) {
                 return reject(new Error('Please Verify Your Account'))
               }
-              const userData = { id: results[1][0]._id, username }
+              let role
+              if (results[1][0].is_superadmin) {
+                role = 3
+              } else if (results[1][0].is_admin) {
+                role = 2
+              } else {
+                role = 1
+              }
+              const userData = { id: results[1][0]._id, username, role }
               return resolve(userData)
             } else {
               return reject(new Error(err || 'Username Or Password Wrong'))

@@ -12,11 +12,15 @@
             type: object
             required:
               - username
+              - email
               - password
             properties:
               username:
                 type: string
                 examples: alen1945
+              email:
+                type: string
+                examples: mysecretpassword
               password:
                 type: string
                 examples: mysecretpassword

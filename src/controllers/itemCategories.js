@@ -70,6 +70,10 @@ exports.GetAllCategory = async (req, res, next) => {
 
 exports.GetDetailCategory = async (req, res, next) => {
   try {
+    if (!req.params.id || !/^\d+$/.test(req.params.id)) {
+      console.log(req.params.id)
+      throw new Error('Please Defined correct id of category')
+    }
     const dataCategory = await GetCategory(req.params.id)
     if (dataCategory) {
       const params = {

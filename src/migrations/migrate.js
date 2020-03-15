@@ -10,6 +10,7 @@ module.exports = {
   ],
   foreign: [
     ...require('./users').queryForeign,
+    ...require('./carts').queryForeign,
     ...require('./restaurants').queryForeign,
     ...require('./items').queryForeign
   ]

@@ -8,6 +8,7 @@ const storage = multer.diskStorage({
     cb(null, new Date().getTime() + '.' + file.mimetype.split('/')[1])
   }
 })
+
 const validMimeType = ['png', 'jpg', 'jpeg']
 const uploadMulter = multer({
   storage: storage,

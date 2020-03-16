@@ -11,8 +11,7 @@ const restaurantsT = `
 )
 `
 const restaurantsF = `
-  ALTER TABLE restaurants
-  DROP CONSTRAINT IF EXISTS FK_Owner;
+  
   ALTER TABLE restaurants
   ADD CONSTRAINT FK_Owner
     FOREIGN KEY (id_owner) REFERENCES users(_id)

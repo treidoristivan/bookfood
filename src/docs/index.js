@@ -9,7 +9,7 @@ const docsUrl = '/api-docs/documents/'
 const apiDocsSettings = {
   openapi: '3.0.0',
   info: {
-    title: 'API - MakanDO',
+    title: ' BOOK & FOOD',
     version: '1.0.0',
     description: 'API for Development'
   },

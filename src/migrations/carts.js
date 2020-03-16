@@ -22,16 +22,14 @@ CREATE TABLE IF NOT EXISTS transcations(
 )
 `
 const cartsF = `
-ALTER TABLE carts
-DROP CONSTRAINT IF EXISTS FK_User_Cart;
+
 ALTER TABLE carts
 ADD CONSTRAINT FK_User_Cart
   FOREIGN KEY (id_user) REFERENCES users(_id)
   ON DELETE CASCADE
 `
 const transcationsF = `
-  ALTER TABLE transcations
-  DROP CONSTRAINT IF EXISTS FK_User_Transcation;
+ 
   ALTER TABLE transcations
   ADD CONSTRAINT FK_User_Transcation
     FOREIGN KEY (id_user) REFERENCES users(_id)

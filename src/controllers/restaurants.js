@@ -95,6 +95,7 @@ exports.GetDetailRestaurant = async (req, res, next) => {
 exports.CreateRestaurant = async (req, res, next) => {
   try {
     await uploads(req, res, 'logo')
+    const idOwner = req.body.id_owner
     if (!req.body.id_owner || !req.body.name) {
       throw new Error('id_owner and name is required')
     }
@@ -111,7 +112,7 @@ exports.CreateRestaurant = async (req, res, next) => {
       columns.push('logo')
       values.push(req.file.path)
     }
-    const restaurant = await CreateRestaurant(req.body.id_owner, { columns, values })
+    const restaurant = await CreateRestaurant(idOwner, { columns, values })
     if (restaurant) {
       res.status(201).send({
         success: true,

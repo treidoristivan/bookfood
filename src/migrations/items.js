@@ -31,9 +31,7 @@ const itemReviewsT = `
   )
 `
 const itemF = `
-  ALTER TABLE items
-  DROP CONSTRAINT IF EXISTS FK_Restaurant,
-  DROP CONSTRAINT IF EXISTS FK_Category;
+ 
   ALTER TABLE items
   ADD CONSTRAINT FK_Restaurant
     FOREIGN KEY (id_restaurant) REFERENCES restaurants(_id)
@@ -43,9 +41,7 @@ const itemF = `
     ON DELETE SET NULL
 `
 const itemReviewsF = `
-  ALTER TABLE itemReviews
-  DROP CONSTRAINT IF EXISTS FK_User_Review,
-  DROP CONSTRAINT IF EXISTS FK_Item_Review;
+ 
   ALTER TABLE itemReviews
   ADD CONSTRAINT FK_User_Review
     FOREIGN KEY (id_user) REFERENCES users(_id)

@@ -95,9 +95,8 @@ exports.GetDetailRestaurant = async (req, res, next) => {
 exports.CreateRestaurant = async (req, res, next) => {
   try {
     await uploads(req, res, 'logo')
-    const idOwner = req.body.id_owner
     if (!req.body.id_owner || !req.body.name) {
-      throw new Error('id_owner and name is required')
+      throw new Error('id owner and name is required')
     }
     const fillable = ['id_owner', 'name', 'logo', 'address', 'description']
     const columns = []
@@ -112,7 +111,7 @@ exports.CreateRestaurant = async (req, res, next) => {
       columns.push('logo')
       values.push(req.file.path)
     }
-    const restaurant = await CreateRestaurant(idOwner, { columns, values })
+    const restaurant = await CreateRestaurant(req.body.id_owner, { columns, values })
     if (restaurant) {
       res.status(201).send({
         success: true,
@@ -135,7 +134,7 @@ exports.CreateRestaurant = async (req, res, next) => {
 exports.UpdateRestaurant = async (req, res, next) => {
   try {
     await uploads(req, res, 'logo')
-    if (!(Object.keys(req.body).length > 0)) {
+    if (!req.file && !(Object.keys(req.body).length > 0)) {
       throw new Error('Please Defined What you want to update')
     }
     const { id } = req.params

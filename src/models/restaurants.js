@@ -12,14 +12,15 @@ exports.GetRestaurants = (id, params) => {
     } else {
       const { perPage, currentPage, search, sort } = params
       const condition = `
-          ${search && `WHERE ${search.map(v => `${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
-          ORDER BY ${sort.map(v => `${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
+          ${search && `WHERE ${search.map(v => `R.${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
+          ORDER BY ${sort.map(v => `R.${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
           ${(parseInt(currentPage) && parseInt(perPage)) ? `LIMIT ${parseInt(perPage)} 
           OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}
          `
+      console.log(condition)
       runQuery(`
-        SELECT COUNT(*) AS total from restaurants ${condition.substring(0, condition.indexOf('LIMIT'))};
-        SELECT * from restaurants ${condition}
+        SELECT COUNT(*) AS total from restaurants R ${condition.substring(0, condition.indexOf('LIMIT'))};
+        SELECT R._id,R.name,R.logo,R.address,R.description,U.username as owner from restaurants R INNER JOIN users U ON R.id_owner=U._id ${condition}
       `, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))

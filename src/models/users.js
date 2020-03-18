@@ -17,7 +17,7 @@ exports.GetUser = (id) => {
 exports.GetProfile = (id, params) => {
   return new Promise((resolve, reject) => {
     if (id) {
-      runQuery(`SELECT u._id,u.username,p.fullname, p.email,p.balance,p.gender,p.address,p.picture from userProfile p INNER JOIN users u ON p.id_user=u._id WHERE u._id=${id}`,
+      runQuery(`SELECT u._id,u.is_superadmin,u.is_admin,u.username,p.fullname, p.email,p.balance,p.gender,p.address,p.picture from userProfile p INNER JOIN users u ON p.id_user=u._id WHERE u._id=${id}`,
         (error, results, fields) => {
           if (error) {
             return reject(new Error(error))
@@ -51,7 +51,48 @@ exports.GetProfile = (id, params) => {
     }
   })
 }
-
+exports.GetAdminRestaurant = (id) => {
+  return new Promise((resolve, reject) => {
+    runQuery(`SELECT _id,name from restaurants WHERE id_owner=${id}`,
+      (error, results, fields) => {
+        if (error) {
+          return reject(new Error(error))
+        } else {
+          return resolve(results[1])
+        }
+      }
+    )
+  })
+}
+exports.GetAllAdminItems = (idUser, params) => {
+  return new Promise((resolve, reject) => {
+    const { perPage, currentPage, search, sort } = params
+    const condition = `
+        ${search && search[0] && `WHERE ${search.map(v => `I.${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
+        ORDER BY ${sort.map(v => `I.${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
+        ${(parseInt(currentPage) && parseInt(perPage)) ? `LIMIT ${parseInt(perPage)} 
+        OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}
+        `
+    runQuery(`
+      SELECT COUNT(I._id) AS total from items I JOIN restaurants R ON I.id_restaurant=R._id AND R.id_owner=${idUser} 
+      JOIN itemCategories IC ON I.id_category=IC._id ${condition.substring(0, condition.indexOf('LIMIT'))};
+      SELECT I._id,I.id_restaurant,R.name as name_restaurant,I.id_category,IC.name as name_category,
+      I.name,I.price,I.quantity,I.description,I.images,I.created_at,I.updated_at 
+      from items I JOIN restaurants R ON I.id_restaurant=R._id AND R.id_owner=${idUser} 
+      JOIN itemCategories IC ON I.id_category=IC._id  ${condition}
+    `, (err, results, fields) => {
+      if (err) {
+        return reject(new Error(err))
+      }
+      if (results[1][0]) {
+        const { total } = results[1][0]
+        return resolve({ results: results[2], total })
+      } else {
+        return resolve({ results: [], total: 0 })
+      }
+    })
+  })
+}
 exports.CreateUser = (data, isAdmin) => {
   return new Promise((resolve, reject) => {
     const { username, password, email } = data

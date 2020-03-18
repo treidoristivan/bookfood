@@ -24,7 +24,7 @@ exports.GetReview = (id, idUser, params) => {
       console.log(condition)
       runQuery(`
         SELECT COUNT(*) AS total from itemReviews ${condition.substring(0, condition.indexOf('LIMIT'))};
-        SELECT * from itemReviews ${condition}
+        SELECT IR._id,I.name,IR.rating,IR.review,IR.created_at from itemReviews IR INNER JOIN items I ON IR.id_item=I._id ${condition}
       `, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))

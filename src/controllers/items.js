@@ -164,7 +164,7 @@ exports.CreateItem = async (req, res, next) => {
 exports.UpdateItem = async (req, res, next) => {
   try {
     await uploads(req, res, 'images')
-    if (!(Object.keys(req.body).length > 0)) {
+    if (!req.file && !(Object.keys(req.body).length > 0)) {
       throw new Error('Please Defined What you want to update')
     }
     const { id } = req.params

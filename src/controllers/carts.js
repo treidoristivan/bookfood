@@ -1,11 +1,10 @@
-const { GetUserCart, UpdateItemCart, AddItem, RemoveItemCart, CheckOutItem } = require('../models/carts')
+const { GetUserCart, UpdateItemCart, AddItem, RemoveItemCart, CheckOutItem, GetHistoryTransaction } = require('../models/carts')
 const { GetItem } = require('../models/items')
 const { GetProfile } = require('../models/users')
 exports.GetAllCart = async (req, res, next) => {
   try {
     const idUser = req.auth.id
     const carts = await GetUserCart(false, idUser, true)
-    console.log(carts)
     if (carts) {
       return res.status(200).send({
         succces: true,
@@ -27,6 +26,30 @@ exports.GetAllCart = async (req, res, next) => {
   }
 }
 
+exports.GetDetailCart = async (req, res, next) => {
+  try {
+    const idUser = req.auth.id
+    const cart = await GetUserCart(req.params.id, idUser)
+    if (cart) {
+      return res.status(200).send({
+        succces: true,
+        data: cart
+      })
+    } else {
+      return res.status(200).send({
+        succces: true,
+        data: false,
+        msg: `You Cart with id ${req.params.id} Not Exists`
+      })
+    }
+  } catch (e) {
+    console.log(e)
+    res.status(202).send({
+      succces: false,
+      msg: e.message
+    })
+  }
+}
 exports.AddItem = async (req, res, next) => {
   try {
     if (!req.body.id_item || !req.body.total_items) {
@@ -40,23 +63,29 @@ exports.AddItem = async (req, res, next) => {
     if (parseInt(item.quantity) < parseInt(req.body.total_items)) {
       throw new Error(`Not enough items, there are only ${item.quantity} item${item.quantity > 1 ? 's' : ''}`)
     }
-    console.log(item)
     const dataItem = {
       idItem: item._id,
       nameItem: item.name,
+      imagesItem: item.images,
       totalItem: req.body.total_items,
       totalPrice: parseFloat(req.body.total_items) * parseFloat(item.price)
     }
     const addedItem = await AddItem(idUser, dataItem)
     if (addedItem) {
-      if (addedItem === 'update') {
-        return res.status(201).send({
+      if (addedItem.status === 'update') {
+        return res.status(200).send({
           success: true,
+          data: {
+            idCart: addedItem.idCart
+          },
           msg: 'Item Already In Cart, Update Success'
         })
       } else {
         return res.status(201).send({
           success: true,
+          data: {
+            idCart: addedItem.idCart
+          },
           msg: 'Success Added Item to Cart'
         })
       }
@@ -85,6 +114,9 @@ exports.UpdateItemCart = async (req, res, next) => {
     const item = await GetItem(itemCart.id_item)
     if (!item) {
       throw new Error('This Item Not Exists AnyMore')
+    }
+    if (parseInt(item.quantity) < parseInt(req.body.total_items)) {
+      throw new Error(`Not enough items, there are only ${item.quantity} item${item.quantity > 1 ? 's' : ''}`)
     }
     const updateItemCart = await UpdateItemCart(idItemCart, idUser, {
       totalItem: req.body.total_items,
@@ -151,6 +183,40 @@ exports.CheckOutItem = async (req, res, next) => {
     console.log(e)
     res.status(202).send({
       success: false,
+      msg: e.message
+    })
+  }
+}
+
+exports.GetHistoryTransaction = async (req, res, next) => {
+  try {
+    const idUser = req.auth.id
+    const params = {
+      currentPage: req.query.page || 1,
+      perPage: req.query.limit || 5
+    }
+    const historyTrasaction = await GetHistoryTransaction(idUser, params)
+    if (historyTrasaction) {
+      return res.status(200).send({
+        succces: true,
+        data: historyTrasaction.map(v => (
+          {
+            ...v,
+            listItem: v.listItem.split('----').map(v => JSON.parse(v))
+          }
+        ))
+      })
+    } else {
+      return res.status(200).send({
+        succces: true,
+        data: false,
+        msg: 'history transaction is empty'
+      })
+    }
+  } catch (e) {
+    console.log(e)
+    res.status(202).send({
+      succces: false,
       msg: e.message
     })
   }

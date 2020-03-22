@@ -140,6 +140,7 @@ exports.CreateItem = async (req, res, next) => {
     if (req.file) {
       columns.push('images')
       values.push(req.file.path)
+      // values.push('uploads/' + req.file.filename)
     }
     const item = await CreateItem({ columns, values })
     if (item) {

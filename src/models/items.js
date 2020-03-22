@@ -11,9 +11,11 @@ exports.GetItem = (id, params) => {
       })
     } else {
       const { perPage, currentPage, search, sort } = params
+      console.log(params)
       const condition = `
+          ${params.id_restaurant ? `WHERE I.id_restaurant IN (${params.id_restaurant.join(',')})` : ''}
           ${params.id_category ? `WHERE I.id_category IN (${params.id_category.join(',')})` : ''}
-          ${search && search[0] && `${params.id_category ? 'AND' : 'WHERE'} ${search.map(v => `I.${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
+          ${search && search[0] && `${params.id_category || params.id_restaurant ? 'AND' : 'WHERE'} ${search.map(v => `I.${v.key} LIKE '%${v.value}%'`).join(' AND ')}`}
           ORDER BY ${sort.map(v => `I.${v.key} ${!v.value ? 'ASC' : 'DESC'}`).join(' , ')}
           ${(parseInt(currentPage) && parseInt(perPage)) ? `LIMIT ${parseInt(perPage)} 
           OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}` : ''}

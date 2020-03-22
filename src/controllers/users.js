@@ -259,17 +259,43 @@ exports.LoginUser = async (req, res, next) => {
             }
           })
       })
+      const dataUser = await GetProfile(dataLogin.id)
       const token = jwt.sign(dataLogin, process.env.APP_KEY, { expiresIn: '1H' })
       res.send({
         success: true,
         msg: 'Login Success',
         data: {
-          token
+          token,
+          dataUser
         }
       })
     } else {
       throw new Error('Username and Password is Required')
     }
+  } catch (e) {
+    console.log(e)
+    res.status(401).send({
+      success: false,
+      msg: e.message
+    })
+  }
+}
+
+exports.RefreshToken = async (req, res, next) => {
+  try {
+    const dataUser = await GetProfile(req.auth.id)
+    const dataPayload = jwt.decode(req.headers.authorization.replace(/Bearer\s*/, ''))
+    delete dataPayload.exp
+    delete dataPayload.iat
+    const token = jwt.sign(dataPayload, process.env.APP_KEY, { expiresIn: '1H' })
+    res.send({
+      success: true,
+      msg: 'Login Success',
+      data: {
+        token,
+        dataUser
+      }
+    })
   } catch (e) {
     console.log(e)
     res.status(401).send({
@@ -424,7 +450,7 @@ exports.ForgotPassword = async (req, res, next) => {
       const code = await GetCodeVerify(req.body.username)
       if (code.status) {
         res.status(200).send({
-          status: true,
+          success: true,
           msg: 'Request Success, You Can change your password',
           code_verify: code.codeVerify,
           url_to_change: `${process.env.APP_URL}/forgot-password?code=${code.codeVerify}`

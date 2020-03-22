@@ -2,7 +2,7 @@ const { runQuery } = require('../config/db')
 exports.GetUserCart = (idCart, idUser, includeItem) => {
   return new Promise((resolve, reject) => {
     if (idCart) {
-      runQuery(`SELECT * FROM carts WHERE _id=${idCart} AND id_user=${idUser} AND is_check_out=0`, (err, results, fields) => {
+      runQuery(`SELECT C._id,C.id_item,C.name_item,I.images,C.total_items,C.total_price FROM carts C INNER JOIN items I ON C.id_item=I._id WHERE C._id=${idCart} && C.id_user=${idUser} AND C.is_check_out=0`, (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
@@ -10,7 +10,7 @@ exports.GetUserCart = (idCart, idUser, includeItem) => {
       })
     } else {
       runQuery(`
-      SELECT C._id,C.id_item,C.name_item,I.images,C.total_items,C.total_price FROM carts C INNER JOIN items I ON C.id_item=I._id WHERE id_user=${idUser} AND is_check_out=0;
+      SELECT C._id,C.id_item,C.name_item,I.images,C.total_items,C.total_price FROM carts C INNER JOIN items I ON C.id_item=I._id WHERE C.id_user=${idUser} AND C.is_check_out=0;
       SELECT SUM(total_price) AS totalPrice From carts WHERE id_user=${idUser} AND is_check_out=0
       `, (err, results, fields) => {
         if (err) {
@@ -34,29 +34,31 @@ exports.GetUserCart = (idCart, idUser, includeItem) => {
 
 exports.AddItem = (idUser, dataItem) => {
   return new Promise((resolve, reject) => {
-    const { idItem, nameItem, totalItem, totalPrice } = dataItem
-    runQuery(`SELECT COUNT(*) AS total FROM carts WHERE id_user=${idUser} AND id_item=${idItem} AND is_check_out=0`,
+    const { idItem, nameItem, imagesItem, totalItem, totalPrice } = dataItem
+    runQuery(`SELECT COUNT(_id) AS total, _id FROM carts WHERE id_user=${idUser} AND id_item=${idItem} AND is_check_out=0`,
       (err, results, fields) => {
         if (err) {
           return reject(new Error(err))
         }
-        if (results[1][0].total) {
+        const dataCart = results[1][0]
+        if (dataCart.total) {
           return runQuery(`UPDATE carts SET total_items=total_items+${totalItem},total_price=total_price+${totalPrice} WHERE id_item=${idItem} AND id_user=${idUser} AND is_check_out=0`,
             (err, results, fields) => {
               if (err) {
                 return reject(new Error(err))
               }
-              console.log(results[1].affectedRows)
-              return resolve('update')
+              console.log('datupdate', results[1])
+              return resolve({ status: 'update', idCart: dataCart._id })
             })
         }
-        runQuery(`INSERT INTO carts(id_user,id_item,name_item,total_items,total_price) VALUES(${idUser},${idItem},'${nameItem}',${totalItem},${totalPrice})`,
+        runQuery(`INSERT INTO carts(id_user,id_item,name_item,images_item,total_items,total_price) VALUES(${idUser},${idItem},'${nameItem}','${imagesItem}',${totalItem},${totalPrice})`,
           (err, results, fields) => {
             if (err) {
               console.log(err)
               return reject(new Error(err))
             }
-            return resolve(true)
+            console.log(results[1])
+            return resolve({ status: 'created', idCart: results[1].insertedId })
           })
       })
   })
@@ -93,16 +95,16 @@ exports.CheckOutItem = (idUser, price) => {
   return new Promise((resolve, reject) => {
     runQuery(` 
       SELECT items._id,items.name,items.quantity,carts.id_item,carts.total_items FROM items INNER JOIN carts ON carts.id_item = items._id WHERE items.quantity < carts.total_items AND carts.id_user=${idUser} AND carts.is_check_out=0 ;
-      SELECT id_item FROM carts WHERE id_user=${idUser} AND is_check_out=0
+      SELECT _id FROM carts WHERE id_user=${idUser} AND is_check_out=0
 `, (err, results, fields) => {
       if (!err) {
         if (!results[1][0]) {
-          const itemId = results[2].map(v => v.id_item)
+          const cartId = results[2].map(v => v._id)
           runQuery(`
           UPDATE userProfile SET balance=balance-${parseFloat(price)} WHERE id_user = ${idUser};
           UPDATE items INNER JOIN carts ON items._id = carts.id_item SET items.quantity = items.quantity - carts.total_items WHERE carts.id_user=${idUser} AND carts.is_check_out=0;
           UPDATE carts SET is_check_out=1 WHERE id_user=${idUser} AND is_check_out=0;
-          INSERT INTO transcations(id_user,list_item,total_price) VALUES(${idUser},'${itemId.join(',')}',${price})
+          INSERT INTO transactions(id_user,list_item,total_price) VALUES(${idUser},'${cartId.join(',')}',${price})
           `, (err, results, fields) => {
             if (err) {
               console.log(err)
@@ -120,6 +122,30 @@ exports.CheckOutItem = (idUser, price) => {
       } else {
         console.log(err)
         return reject(new Error(err))
+      }
+    })
+  })
+}
+
+exports.GetHistoryTransaction = (idUser, params) => {
+  console.log(idUser)
+  return new Promise((resolve, reject) => {
+    const { perPage, currentPage } = params
+    runQuery(`
+    SELECT COUNT(_id) AS total from transactions WHERE id_user=${idUser};
+    SELECT T._id, T.total_price, T.created_at, GROUP_CONCAT(CONCAT_WS(',',
+    CONCAT('{"name":"',C.name_item,'"'),
+    CONCAT('"id":',C.id_item),
+    CONCAT('"images":"',C.images_item,'"}')
+    ) SEPARATOR '----') as listItem FROM transactions T INNER JOIN carts C ON FIND_IN_SET(C._id,T.list_item) > 0
+    WHERE T.id_user=${idUser} GROUP BY T._id
+    LIMIT 100 OFFSET ${(parseInt(currentPage) - 1) * parseInt(perPage)}
+    `, (err, results) => {
+      if (err) {
+        return reject(err)
+      } else {
+        console.log(results)
+        return resolve(results[2])
       }
     })
   })

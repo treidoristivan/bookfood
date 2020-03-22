@@ -51,7 +51,7 @@ exports.AddItem = (idUser, dataItem) => {
               return resolve({ status: 'update', idCart: dataCart._id })
             })
         }
-        runQuery(`INSERT INTO carts(id_user,id_item,name_item,images_item,total_items,total_price) VALUES(${idUser},${idItem},'${nameItem}','${imagesItem}',${totalItem},${totalPrice})`,
+        runQuery(`INSERT INTO carts(id_user,id_item,name_item,total_items,total_price) VALUES(${idUser},${idItem},'${nameItem}',${totalItem},${totalPrice})`,
           (err, results, fields) => {
             if (err) {
               console.log(err)

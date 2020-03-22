@@ -12,8 +12,8 @@ created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
 )
 `
-const transcationsT = `
-CREATE TABLE IF NOT EXISTS transcations(
+const transactionsT = `
+CREATE TABLE IF NOT EXISTS transactions(
   _id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   id_user INT(11) UNSIGNED NOT NULL,
   list_item TEXT,
@@ -28,18 +28,18 @@ ADD CONSTRAINT FK_User_Cart
   FOREIGN KEY (id_user) REFERENCES users(_id)
   ON DELETE CASCADE
 `
-const transcationsF = `
+const transactionsF = `
  
-  ALTER TABLE transcations
+  ALTER TABLE transactions
   ADD CONSTRAINT FK_User_Transcation
     FOREIGN KEY (id_user) REFERENCES users(_id)
     ON DELETE CASCADE
 `
 exports.queryTable = [
   cartsT,
-  transcationsT
+  transactionsT
 ]
 exports.queryForeign = [
   cartsF,
-  transcationsF
+  transactionsF
 ]

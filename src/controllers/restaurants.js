@@ -238,7 +238,7 @@ exports.UpdateRestaurant = async (req, res, next) => {
       }
     }).filter(v => v)
     if (req.file) {
-      params.push({ key: 'logo', value: 'uploads/' + req.file.filename })
+      params.push({ key: 'logo', value: 'uploads/' + req.file.filename  })
     }
     if (params.length > 0) {
       const update = await UpdateRestaurant(id, params)

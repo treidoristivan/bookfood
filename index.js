@@ -1,4 +1,5 @@
 const express = require('express')
+var cors = require('cors')
 const bodyParser = require('body-parser')
 const path = require('path')
 const app = express()
@@ -23,16 +24,20 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 /* Import Middleware */
 const checkAuthToken = require('./src/middleware/authMiddleware')
 
+app.use(cors())
+
 /* CSRF settings */
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, X-Requested-With, Accept, Authorization')
-  if (req.method === 'OPTIONS') {
-    res.header('Acces-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE')
-    return res.status(200).send({})
-  }
-  next()
-})
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*')
+//   res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, X-Requested-With, Accept, Authorization')
+//   if (req.method === 'OPTIONS') {
+//     console.log('Hallooo')
+
+//     res.header('Acces-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE')
+//     return res.status(200).send({})
+//   }
+//   next()
+// })
 
 /* Set ROUTES */
 

@@ -189,7 +189,7 @@ exports.CreateRestaurant = async (req, res, next) => {
     })
     if (req.file) {
       columns.push('logo')
-      values.push(req.file.path)
+      values.push('uploads/' + req.file.filename)
     }
     const restaurant = await CreateRestaurant(req.body.id_owner, { columns, values })
     if (restaurant) {
@@ -238,7 +238,7 @@ exports.UpdateRestaurant = async (req, res, next) => {
       }
     }).filter(v => v)
     if (req.file) {
-      params.push({ key: 'logo', value: req.file.path })
+      params.push({ key: 'logo', value: 'uploads/' + req.file.filename })
     }
     if (params.length > 0) {
       const update = await UpdateRestaurant(id, params)

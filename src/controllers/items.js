@@ -139,8 +139,7 @@ exports.CreateItem = async (req, res, next) => {
     })
     if (req.file) {
       columns.push('images')
-      values.push(req.file.path)
-      // values.push('uploads/' + req.file.filename)
+      values.push('uploads/' + req.file.filename)
     }
     const item = await CreateItem({ columns, values })
     if (item) {
@@ -190,7 +189,7 @@ exports.UpdateItem = async (req, res, next) => {
       }
     }).filter(v => v)
     if (req.file) {
-      params.push({ key: 'images', value: req.file.path })
+      params.push({ key: 'images', value: 'uploads/' + req.file.filename })
     }
     if (params.length > 0) {
       const update = await UpdateItem(id, params)

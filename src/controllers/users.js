@@ -318,8 +318,9 @@ exports.UpdateUser = async (req, res, next) => {
       }
     }).filter(o => o)
     if (req.file) {
-      params.push({ key: 'picture', value: req.file.path })
+      params.push({ key: 'picture', value: 'uploads/' + req.file.filename })
     }
+
     if (req.body.old_password) {
       const user = await GetUser(id)
       const oldPassword = user.password

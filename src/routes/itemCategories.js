@@ -1,7 +1,7 @@
 const itemCategories = require('express').Router()
 const { GetAllCategory, GetDetailCategory, CreateCategory, UpdateCategory, DeleteCategory } = require('../controllers/itemCategories')
 const checkAuthToken = require('../middleware/authMiddleware')
-const permission = require('../middleware/authPermissions')
+const permission = require('../middleware/AuthPermissions')
 
 itemCategories.get('/', checkAuthToken, GetAllCategory)
 itemCategories.get('/:id', checkAuthToken, GetDetailCategory)

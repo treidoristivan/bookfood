@@ -1,6 +1,6 @@
 const Users = require('express').Router()
 const checkAuthToken = require('../middleware/authMiddleware')
-const permission = require('../middleware/authPermissions')
+const permission = require('../middleware/AuthPermissions')
 const { GetProfile, GetAllUuser, DeleteUser, GetAdminRestaurant, GetAllAdminItems } = require('../controllers/users')
 
 Users.get('/', checkAuthToken, permission.admin, GetAllUuser)
